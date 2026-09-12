@@ -33,7 +33,7 @@ Hypervisor-unabhängiges **Container-Image** (VMware/Proxmox/Hyper-V), Podman be
 
 **Erstinstallation**
 ```
-sudo ./setup.sh v1.0.0
+sudo ./setup.sh v1.0.1
 ```
 Legt Daten-Volume + systemd-Service an, zieht das Image, startet den Container, prüft Health und gibt das **einmalige Admin-Passwort** aus. Danach erreichbar unter `https://<VM-IP>/` (zunächst selbstsigniert).
 

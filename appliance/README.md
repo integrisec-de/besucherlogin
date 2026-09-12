@@ -44,15 +44,16 @@ Ein Image-/Container-Tausch fasst `/opt/besucherlogin/data` **nie** an – die D
 Gebraucht wird nur das Verzeichnis `appliance/`. Ohne Git, direkt aus dem Release:
 
 ```bash
-curl -fsSL https://github.com/integrisec-de/besucherlogin/archive/refs/tags/v1.0.0.tar.gz \
-  | tar -xz --strip-components=1 besucherlogin-1.0.0/appliance
+VERSION=v1.0.1
+curl -fsSL https://github.com/integrisec-de/besucherlogin/archive/refs/tags/$VERSION.tar.gz \
+  | tar -xz --strip-components=1 besucherlogin-${VERSION#v}/appliance
 cd appliance && chmod +x *.sh
 ```
 
 Alternativ das ganze Repo per Git:
 
 ```bash
-git clone --depth 1 --branch v1.0.0 https://github.com/integrisec-de/besucherlogin.git
+git clone --depth 1 --branch v1.0.1 https://github.com/integrisec-de/besucherlogin.git
 cd besucherlogin/appliance && chmod +x *.sh
 ```
 
@@ -61,7 +62,7 @@ Das `chmod` ist nötig – im Archiv sind die Scripts nicht als ausführbar mark
 ## Installation (einmalig)
 
 ```bash
-sudo ./setup.sh v1.0.0      # ohne Tag = latest
+sudo ./setup.sh v1.0.1      # ohne Tag = latest
 ```
 
 Das Script legt Volume + Service an, startet den Container, prüft Health und gibt das
@@ -124,15 +125,15 @@ ist das zusätzliche Netz.
 Automatisch per GitHub Actions beim Tag-Push:
 
 ```bash
-git tag v1.0.0 && git push origin v1.0.0
-# -> ghcr.io/<owner>/besucherlogin:v1.0.0  +  :latest
+git tag vX.Y.Z && git push origin vX.Y.Z
+# -> ghcr.io/<owner>/besucherlogin:vX.Y.Z  +  :latest
 ```
 
 Manuell/lokal:
 
 ```bash
-podman build -f appliance/Containerfile -t ghcr.io/<owner>/besucherlogin:v1.0.0 .
-podman push ghcr.io/<owner>/besucherlogin:v1.0.0
+podman build -f appliance/Containerfile -t ghcr.io/<owner>/besucherlogin:vX.Y.Z .
+podman push ghcr.io/<owner>/besucherlogin:vX.Y.Z
 ```
 
 > Der GHCR-Namespace richtet sich nach dem GitHub-Owner (aktuell `integrisec-de`).

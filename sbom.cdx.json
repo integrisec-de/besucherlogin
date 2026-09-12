@@ -4,7 +4,7 @@
   "serialNumber": "urn:uuid:0d510e94-b584-4e11-bd72-fad1839a87cb",
   "version": 1,
   "metadata": {
-    "timestamp": "2026-09-12T12:27:40Z",
+    "timestamp": "2026-09-12T12:40:46Z",
     "lifecycles": [
       {
         "phase": "build"
@@ -21,9 +21,9 @@
     },
     "component": {
       "type": "application",
-      "bom-ref": "besucherlogin@1.0.0",
+      "bom-ref": "besucherlogin@1.0.1",
       "name": "besucherlogin",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "description": "Digitales Besucherbuch fuer Empfang und Pforte, self-hosted",
       "supplier": {
         "name": "integrisec (Steven Mai)"
@@ -391,7 +391,7 @@
   ],
   "dependencies": [
     {
-      "ref": "besucherlogin@1.0.0",
+      "ref": "besucherlogin@1.0.1",
       "dependsOn": [
         "qrcode-generator",
         "assets/fonts/outfit-400.woff2",
