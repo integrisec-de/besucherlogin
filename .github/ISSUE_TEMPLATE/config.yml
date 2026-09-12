@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Sicherheitslücke melden
+    url: https://github.com/integrisec-de/besucherlogin/blob/main/SECURITY.md
+    about: Vertraulich per E-Mail an kontakt@integrisec.de – bitte kein öffentliches Issue.
+  - name: Vor dem Melden lesen
+    url: https://github.com/integrisec-de/besucherlogin/blob/main/CONTRIBUTING.md
+    about: Woran sich Änderungen messen lassen und was das Projekt bewusst nicht tut.

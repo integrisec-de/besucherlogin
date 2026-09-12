@@ -1,0 +1,68 @@
+name: Fehler melden
+description: Etwas funktioniert nicht wie beschrieben
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Sicherheitslücken gehören nicht hierher.** Bitte vertraulich per E-Mail
+        an `kontakt@integrisec.de` – nicht als Issue, auch nicht als Hinweis ohne
+        Details. Installationen dieser Software verarbeiten Besucherdaten; eine
+        öffentliche Meldung setzt Betreiber einem Risiko aus, bevor sie reagieren
+        können. Siehe SECURITY.md.
+
+  - type: dropdown
+    id: betriebsart
+    attributes:
+      label: Betriebsart
+      options:
+        - Node (server.mjs, SQLite)
+        - Cloudflare Pages (Workers KV)
+        - Appliance (Container auf eigener VM)
+        - weiß nicht
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version oder Commit
+      placeholder: "v1.0.1 oder 7d27069"
+    validations:
+      required: true
+
+  - type: textarea
+    id: erwartet
+    attributes:
+      label: Was sollte passieren, was passiert stattdessen?
+    validations:
+      required: true
+
+  - type: textarea
+    id: schritte
+    attributes:
+      label: Schritte zum Nachstellen
+      placeholder: |
+        1. …
+        2. …
+        3. …
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Log-Ausgabe
+      description: >
+        Appliance: `journalctl -u besucherlogin` oder
+        `podman logs besucherlogin`. Node: die Konsolenausgabe.
+        Cloudflare: die Worker-Logs.
+      render: text
+    validations:
+      required: false
+
+  - type: markdown
+    attributes:
+      value: |
+        Bitte **keine echten Besucherdaten** einfügen – Namen, Firmen und
+        Ausweisnummern vorher durch Platzhalter ersetzen.
