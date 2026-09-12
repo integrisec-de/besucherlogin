@@ -66,8 +66,74 @@ Dieselbe Codebasis läuft auf zwei Wegen – der Request-Handler
 | Einstieg | `server.mjs` | Pages Functions |
 | Start | `npm start` | Deploy als Pages-Projekt |
 
-Für Cloudflare Pages werden die KV-Bindings `AUTH_KV`, `SESSIONS_KV`,
-`VISITORS_KV` und `AUDIT_KV` gesetzt.
+Der Pages-Betrieb braucht ein paar Handgriffe mehr – siehe unten.
+
+## Betrieb auf Cloudflare Pages
+
+Das Repo als Pages-Projekt deployen und vier **KV-Bindings** setzen:
+
+| Binding | Inhalt |
+|---|---|
+| `AUTH_KV` | Benutzer, Einstellungen |
+| `SESSIONS_KV` | Sitzungen |
+| `VISITORS_KV` | Besucherdatensätze |
+| `AUDIT_KV` | Audit-Log |
+
+Optional lässt sich ein **Demo-Modus** einschalten:
+
+| Variable | Wert |
+|---|---|
+| `DEMO` | exakt `true` oder `1` |
+
+Andere Werte schalten ihn **nicht** ein. Im Demo-Modus antworten diese Routen mit
+`403`: Benutzer anlegen, ändern und löschen · `PUT /settings` · Passwortwechsel ·
+2FA-Einrichtung · alle `/backup`-Routen. Besucher erfassen, ein- und auschecken,
+Suche und Export bleiben offen.
+
+### Ersten Benutzer anlegen – Pflichtschritt
+
+Unter Node legt `server.mjs` beim ersten Start automatisch einen `admin` an.
+**Auf Cloudflare Pages geschieht das nicht**, weil `server.mjs` dort nicht läuft.
+Ohne diesen Schritt gibt es keinen Login.
+
+Passwort-Hash erzeugen:
+
+```bash
+node tools/hash-password.mjs
+```
+
+Das Skript fragt das Passwort ab und gibt einen fertigen Datensatz aus. Als
+Argument übergeben funktioniert auch, landet dann aber in der Shell-History.
+
+Den Datensatz in **`AUTH_KV`** unter dem Schlüssel `user:admin` ablegen:
+
+```json
+{
+  "username": "admin",
+  "passwordHash": "pbkdf2:100000:<salt-hex>:<hash-hex>",
+  "role": "admin",
+  "disabled": false,
+  "createdAt": 1757000000000
+}
+```
+
+`role` muss `admin` sein, sonst bleibt der Adminbereich verborgen. Das Format ist
+PBKDF2-SHA256 mit 100.000 Iterationen – kein bcrypt, kein Klartext.
+
+> **Bei `DEMO=true`:** Der Passwortwechsel ist gesperrt. Das hier gesetzte Passwort
+> lässt sich später nur durch Überschreiben des KV-Eintrags ändern, nicht über die
+> Oberfläche. Also gleich eines wählen, das bleiben darf.
+
+### Einstellungen vorbelegen
+
+Ohne eigenen Eintrag gelten: Sitzungsdauer **480 Minuten**, Aufbewahrung **aktiv mit
+90 Tagen**. Bei `DEMO=true` ist `PUT /settings` gesperrt – wer kürzere Fristen will,
+legt `config:settings` direkt in `AUTH_KV` an:
+
+```json
+{ "sessionTtlMinutes": 480, "retentionEnabled": true, "retentionDays": 7 }
+```
+
 
 ## On-Premises-Appliance
 
@@ -94,6 +160,7 @@ server.mjs              Node-Einstieg: SQLite, Static-Serving, TLS, Löschlauf
 branding.js             lädt Logo und Farbpalette zur Laufzeit
 assets/                 Stylesheet, Outfit-Schriften, Favicons, Platzhalterlogo
 appliance/              Container-Setup für den On-Prem-Betrieb
+tools/                  Hilfsskripte (Passwort-Hash fuer den Pages-Betrieb)
 ```
 
 Weitere Details zu Architektur und API: [DOKUMENTATION.md](DOKUMENTATION.md).
