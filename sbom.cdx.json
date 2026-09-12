@@ -1,0 +1,474 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.6",
+  "serialNumber": "urn:uuid:2e68c548-00a7-44de-9b4b-ec4ac6f184d6",
+  "version": 1,
+  "metadata": {
+    "timestamp": "2026-09-12T10:34:40Z",
+    "lifecycles": [
+      {
+        "phase": "build"
+      }
+    ],
+    "tools": {
+      "components": [
+        {
+          "type": "application",
+          "name": "sbom-generator",
+          "description": "Erzeugt aus dem Dateibestand des Auszugs; Hashes zur Laufzeit berechnet"
+        }
+      ]
+    },
+    "component": {
+      "type": "application",
+      "bom-ref": "besucherlogin@1.0.0",
+      "name": "besucherlogin",
+      "version": "1.0.0",
+      "description": "Digitales Besucherbuch fuer Empfang und Pforte, self-hosted",
+      "supplier": {
+        "name": "integrisec (Steven Mai)"
+      },
+      "authors": [
+        {
+          "name": "Steven Mai"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "audit:npm-dependencies",
+          "value": "0 (keine dependencies/devDependencies, kein Lockfile)"
+        }
+      ]
+    }
+  },
+  "components": [
+    {
+      "type": "library",
+      "bom-ref": "qrcode-generator",
+      "name": "qrcode-generator",
+      "version": "vendored (Einzeldatei, Lizenzheader intakt)",
+      "description": "QR Code Generator for JavaScript – erzeugt den QR-Code fuer die 2FA-Einrichtung",
+      "author": "Kazuhiko Arase",
+      "purl": "pkg:github/kazuhikoarase/qrcode-generator",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "18ae399f81182bc9de916e9c77b195df20cc58d6f2d55a62b085a299f1bf1780"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "http://www.d-project.com/"
+        }
+      ],
+      "properties": [
+        {
+          "name": "audit:path",
+          "value": "qrcode.js"
+        }
+      ]
+    },
+    {
+      "type": "file",
+      "bom-ref": "assets/fonts/outfit-400.woff2",
+      "group": "Outfit",
+      "name": "outfit-400.woff2",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "0215d96545aece4f19b4e86f10dab813005ea7fe9490537c1ebad83b39faa9d7"
+        }
+      ],
+      "description": "Outfit, Schnitt 400 (subsettetes woff2)",
+      "licenses": [
+        {
+          "license": {
+            "id": "OFL-1.1"
+          }
+        }
+      ]
+    },
+    {
+      "type": "file",
+      "bom-ref": "assets/fonts/outfit-500.woff2",
+      "group": "Outfit",
+      "name": "outfit-500.woff2",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "188ea7323fd6fefe5214df9b52e6ef3b7d8f576b2e442ee5671f3004d49cd241"
+        }
+      ],
+      "description": "Outfit, Schnitt 500 (subsettetes woff2)",
+      "licenses": [
+        {
+          "license": {
+            "id": "OFL-1.1"
+          }
+        }
+      ]
+    },
+    {
+      "type": "file",
+      "bom-ref": "assets/fonts/outfit-600.woff2",
+      "group": "Outfit",
+      "name": "outfit-600.woff2",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "68659ba8ac34f7d61db98e68daa1f7fff9dfac3837160944d95c4e1050ad9bd4"
+        }
+      ],
+      "description": "Outfit, Schnitt 600 (subsettetes woff2)",
+      "licenses": [
+        {
+          "license": {
+            "id": "OFL-1.1"
+          }
+        }
+      ]
+    },
+    {
+      "type": "file",
+      "bom-ref": "assets/fonts/outfit-700.woff2",
+      "group": "Outfit",
+      "name": "outfit-700.woff2",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "9a3419eb5e1473d0c20caff110667f0aa20026023445458e6a6d4505bb09066a"
+        }
+      ],
+      "description": "Outfit, Schnitt 700 (subsettetes woff2)",
+      "licenses": [
+        {
+          "license": {
+            "id": "OFL-1.1"
+          }
+        }
+      ]
+    },
+    {
+      "type": "file",
+      "bom-ref": "assets/fonts/outfit-800.woff2",
+      "group": "Outfit",
+      "name": "outfit-800.woff2",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "97827194f6a56bf76ad0f532048b6c9e36eb86706f1b9139dff603a65b06aa99"
+        }
+      ],
+      "description": "Outfit, Schnitt 800 (subsettetes woff2)",
+      "licenses": [
+        {
+          "license": {
+            "id": "OFL-1.1"
+          }
+        }
+      ]
+    },
+    {
+      "type": "file",
+      "bom-ref": "assets/favicon.ico",
+      "name": "favicon.ico",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "0b5705b8d0a9cdfbdb659cb9aa76166da6a44f6ab79602d74404e1b27fdc97ab"
+        }
+      ],
+      "description": "Favicon des Betreibers – Markenmaterial",
+      "licenses": [
+        {
+          "license": {
+            "name": "Marken- und Branding-Material des Betreibers; nicht Teil der Quellcode-Lizenzierung"
+          }
+        }
+      ]
+    },
+    {
+      "type": "file",
+      "bom-ref": "assets/favicon-32x32.png",
+      "name": "favicon-32x32.png",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "dd53c0cfdc4b9fc8e792940338ce2d633468a2cba657d535f69a957c0c22b65b"
+        }
+      ],
+      "description": "Favicon des Betreibers – Markenmaterial",
+      "licenses": [
+        {
+          "license": {
+            "name": "Marken- und Branding-Material des Betreibers; nicht Teil der Quellcode-Lizenzierung"
+          }
+        }
+      ]
+    },
+    {
+      "type": "platform",
+      "bom-ref": "nodejs@24",
+      "name": "Node.js",
+      "version": "24.x",
+      "description": "Laufzeit; genutzt werden ausschliesslich Kernmodule (node:sqlite, node:crypto, node:http, node:https, node:fs)",
+      "purl": "pkg:generic/node@24",
+      "scope": "required",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "audit:note",
+          "value": "Nicht mitgeliefert, Laufzeitvoraussetzung"
+        }
+      ]
+    },
+    {
+      "type": "container",
+      "bom-ref": "node-24-slim",
+      "name": "node:24-slim",
+      "version": "24-slim",
+      "description": "Base-Image der On-Prem-Appliance (Debian-basiert)",
+      "purl": "pkg:docker/node@24-slim",
+      "scope": "required",
+      "licenses": [
+        {
+          "license": {
+            "name": "Gemischt (Debian-Userland: u.a. GPL-2.0/GPL-3.0, LGPL, MIT, BSD)"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "audit:path",
+          "value": "appliance/Containerfile"
+        },
+        {
+          "name": "audit:impact",
+          "value": "Betrifft nur das gebaute Container-Image, nicht die Lizenzierung des Quellcodes"
+        }
+      ]
+    },
+    {
+      "type": "platform",
+      "bom-ref": "cloudflare-pages",
+      "name": "Cloudflare Workers / Pages Runtime",
+      "description": "Optionale Hosting-Laufzeit (Workers KV, Pages Functions)",
+      "scope": "optional",
+      "licenses": [
+        {
+          "license": {
+            "name": "Proprietaerer Dienst (nicht mitgeliefert)"
+          }
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "gha-actions-checkout@v4",
+      "name": "actions/checkout",
+      "version": "v4",
+      "scope": "excluded",
+      "purl": "pkg:github/actions/checkout@v4",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "audit:scope",
+          "value": "Build-/CI-Zeit, nicht Teil der Distribution"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "gha-docker-setup-buildx-action@v3",
+      "name": "docker/setup-buildx-action",
+      "version": "v3",
+      "scope": "excluded",
+      "purl": "pkg:github/docker/setup-buildx-action@v3",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "audit:scope",
+          "value": "Build-/CI-Zeit, nicht Teil der Distribution"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "gha-docker-login-action@v3",
+      "name": "docker/login-action",
+      "version": "v3",
+      "scope": "excluded",
+      "purl": "pkg:github/docker/login-action@v3",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "audit:scope",
+          "value": "Build-/CI-Zeit, nicht Teil der Distribution"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "gha-docker-metadata-action@v5",
+      "name": "docker/metadata-action",
+      "version": "v5",
+      "scope": "excluded",
+      "purl": "pkg:github/docker/metadata-action@v5",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "audit:scope",
+          "value": "Build-/CI-Zeit, nicht Teil der Distribution"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "gha-docker-build-push-action@v6",
+      "name": "docker/build-push-action",
+      "version": "v6",
+      "scope": "excluded",
+      "purl": "pkg:github/docker/build-push-action@v6",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "audit:scope",
+          "value": "Build-/CI-Zeit, nicht Teil der Distribution"
+        }
+      ]
+    }
+  ],
+  "dependencies": [
+    {
+      "ref": "besucherlogin@1.0.0",
+      "dependsOn": [
+        "qrcode-generator",
+        "assets/fonts/outfit-400.woff2",
+        "assets/fonts/outfit-500.woff2",
+        "assets/fonts/outfit-600.woff2",
+        "assets/fonts/outfit-700.woff2",
+        "assets/fonts/outfit-800.woff2",
+        "assets/favicon.ico",
+        "assets/favicon-32x32.png",
+        "nodejs@24",
+        "node-24-slim",
+        "cloudflare-pages"
+      ]
+    },
+    {
+      "ref": "qrcode-generator",
+      "dependsOn": []
+    },
+    {
+      "ref": "assets/fonts/outfit-400.woff2",
+      "dependsOn": []
+    },
+    {
+      "ref": "assets/fonts/outfit-500.woff2",
+      "dependsOn": []
+    },
+    {
+      "ref": "assets/fonts/outfit-600.woff2",
+      "dependsOn": []
+    },
+    {
+      "ref": "assets/fonts/outfit-700.woff2",
+      "dependsOn": []
+    },
+    {
+      "ref": "assets/fonts/outfit-800.woff2",
+      "dependsOn": []
+    },
+    {
+      "ref": "assets/favicon.ico",
+      "dependsOn": []
+    },
+    {
+      "ref": "assets/favicon-32x32.png",
+      "dependsOn": []
+    },
+    {
+      "ref": "nodejs@24",
+      "dependsOn": []
+    },
+    {
+      "ref": "node-24-slim",
+      "dependsOn": []
+    },
+    {
+      "ref": "cloudflare-pages",
+      "dependsOn": []
+    },
+    {
+      "ref": "gha-actions-checkout@v4",
+      "dependsOn": []
+    },
+    {
+      "ref": "gha-docker-setup-buildx-action@v3",
+      "dependsOn": []
+    },
+    {
+      "ref": "gha-docker-login-action@v3",
+      "dependsOn": []
+    },
+    {
+      "ref": "gha-docker-metadata-action@v5",
+      "dependsOn": []
+    },
+    {
+      "ref": "gha-docker-build-push-action@v6",
+      "dependsOn": []
+    }
+  ]
+}

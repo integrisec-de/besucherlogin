@@ -1,0 +1,15 @@
+# Hält den Build-Kontext schlank. Ins Image kommen ohnehin nur die in
+# appliance/Containerfile per COPY benannten Dateien – das hier beschleunigt
+# nur den Kontext-Transfer beim Bauen.
+.git
+.github
+.claude
+.wrangler
+node_modules
+appliance
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+*.md
+*.toml

@@ -1,0 +1,61 @@
+NOTICE
+======
+
+Besucherlogin
+Copyright 2026 Steven Mai (integrisec)
+
+Dieses Produkt steht unter der Apache License, Version 2.0.
+Der vollstaendige Lizenztext liegt in der Datei LICENSE.
+
+
+-----------------------------------------------------------------------
+Marken
+-----------------------------------------------------------------------
+
+Die Apache License 2.0 raeumt nach Abschnitt 6 (Trademarks) keine
+Markenrechte ein. Nicht von der Lizenz erfasst sind daher insbesondere:
+
+  - die Namen und Wortmarken "Besucherlogin" und "integrisec"
+  - die mitgelieferten Favicons (assets/favicon.ico,
+    assets/favicon-32x32.png)
+
+Diese Zeichen duerfen ohne gesonderte schriftliche Erlaubnis nicht zur
+Kennzeichnung eigener oder abgeleiteter Produkte verwendet werden. Die
+Nutzung der Software selbst ist davon unberuehrt.
+
+
+-----------------------------------------------------------------------
+Fremdbestandteile
+-----------------------------------------------------------------------
+
+Die folgenden Angaben dokumentieren Urheber- und Lizenzangaben zu
+uebernommenen Fremdbestandteilen. Sie gelten zusaetzlich zur Apache
+License 2.0 und sind bei einer Weitergabe mitzufuehren.
+
+
+-----------------------------------------------------------------------
+1) Schriften (Webfonts, lokal ausgeliefert)
+-----------------------------------------------------------------------
+
+Outfit
+  Copyright 2021 The Outfit Project Authors
+  (https://github.com/Outfitio/Outfit-Fonts)
+  Lizenz: SIL Open Font License, Version 1.1
+  Reserved Font Name: keiner
+
+  Vollstaendiger Lizenztext: assets/fonts/OFL.txt
+  Einzelheiten und Herkunft:  assets/fonts/FONTS.md
+
+
+-----------------------------------------------------------------------
+2) qrcode.js - QR Code Generator for JavaScript
+-----------------------------------------------------------------------
+
+  Copyright (c) 2009 Kazuhiko Arase (http://www.d-project.com/)
+  Lizenz: MIT License
+          (http://www.opensource.org/licenses/mit-license.php)
+  Datei:  qrcode.js - der vollstaendige Lizenzheader ist in der Datei
+          selbst enthalten.
+
+  Hinweis des Urhebers: "QR Code" ist eine eingetragene Marke von
+  DENSO WAVE INCORPORATED.

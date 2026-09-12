@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Statistik – Besuchermanagement</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" href="/assets/favicon.ico" sizes="any" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png" />
+  <link rel="stylesheet" href="/assets/app.css" />
+  <script src="/branding.js" defer></script>
+</head>
+<body>
+<div class="container">
+
+  <header class="topbar">
+    <a class="brand" href="/">
+      <img class="brand-logo" src="/assets/logo.svg" alt="Besucherlogin" />
+      <span class="brand-sep"></span>
+      <span class="brand-title">Statistik</span>
+    </a>
+    <nav class="nav-links">
+      <a href="/">Besucher</a>
+      <a href="/admin" id="link-admin">Admin</a>
+      <a href="#" onclick="logout();return false;">Logout</a>
+    </nav>
+  </header>
+
+  <h1>Statistik</h1>
+  <p class="sub" style="margin-bottom:18px;">Auswertung der Besucherdaten</p>
+
+  <!-- FILTER + KPIs -->
+  <div class="card">
+    <h2>Übersicht</h2>
+    <div class="filter-row">
+      <div>
+        <label>Von</label>
+        <input type="date" id="filter-from">
+      </div>
+      <div>
+        <label>Bis</label>
+        <input type="date" id="filter-to">
+      </div>
+      <div style="display:flex;gap:8px;align-items:flex-end;">
+        <button type="button" onclick="applyFilters()">Filter anwenden</button>
+        <button type="button" class="btn-secondary" onclick="clearFilters()">Zurücksetzen</button>
+      </div>
+    </div>
+
+    <div class="stats-grid" style="margin-top:8px;">
+      <div class="stat-box">
+        <div class="stat-label">Besucher im Zeitraum</div>
+        <div class="stat-value" id="stat-range-total">0</div>
+        <div class="muted" style="font-size:0.8rem;">davon <span id="stat-range-open">0</span> offen</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Besucher heute</div>
+        <div class="stat-value" id="stat-today">0</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Letzte 7 Tage</div>
+        <div class="stat-value" id="stat-week">0</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Ø Besuchsdauer (ausgecheckt)</div>
+        <div class="stat-value" style="font-size:1.2rem;" id="stat-avg-duration">n/a</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHART -->
+  <div class="card">
+    <h2>Besucher pro Tag (Zeitraum)</h2>
+    <canvas id="chart" height="260"></canvas>
+  </div>
+
+  <!-- FIRMA / ANSPRECHPARTNER -->
+  <div class="card">
+    <h2>Verteilung</h2>
+    <div class="two-col">
+      <div>
+        <h3 style="margin-bottom:6px;">Besucher pro Firma (Top 10)</h3>
+        <div id="table-firma"></div>
+      </div>
+      <div>
+        <h3 style="margin-bottom:6px;">Besucher pro Ansprechpartner (Top 10)</h3>
+        <div id="table-ansprech"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DETAILTABELLE -->
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">
+      <h2>Details (Zeitraum)</h2>
+      <button type="button" class="btn-small" onclick="exportCsv()">Export als CSV</button>
+    </div>
+    <div id="details-area" style="margin-top:10px;overflow-x:auto;"></div>
+  </div>
+
+</div>
+
+<script>
+  let visitors = [];
+  let lastChart = { labels: [], data: [] };
+
+  function getToken() { return localStorage.getItem("sessionToken"); }
+
+  function esc(s){
+    return (s == null ? "" : String(s)).replace(/[&<>"']/g, c => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+    }[c]));
+  }
+
+  async function apiFetch(url) {
+    const token = getToken();
+    if (!token) { location.href = "/login"; return; }
+    const res = await fetch(url, { headers: { "x-session-token": token } });
+    if (res.status === 401) { location.href = "/login"; return; }
+    return res;
+  }
+
+  async function logout(){
+    const token = getToken();
+    try { await fetch("/auth/logout",{ method:"POST", headers:{ "x-session-token":token }}); } catch {}
+    localStorage.removeItem("sessionToken");
+    localStorage.removeItem("sessionRole");
+    location.href = "/login";
+  }
+
+  function getLocalYMD(dateStr) {
+    const d = new Date(dateStr);
+    if (isNaN(d)) return null;
+    const local = new Date(d.getTime() - d.getTimezoneOffset() * 60000);
+    return local.toISOString().slice(0, 10);
+  }
+
+  function toLocalDateTime(dateStr) {
+    if (!dateStr) return "";
+    const d = new Date(dateStr);
+    if (isNaN(d)) return "";
+    return d.toLocaleString([], { year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit" });
+  }
+
+  function todayYMD() {
+    const now = new Date();
+    const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
+    return local.toISOString().slice(0,10);
+  }
+
+  function lastNDaysYMD(n) {
+    const arr = [];
+    const now = new Date();
+    for (let i=0; i<n; i++) {
+      const d = new Date(now.getTime() - i * 86400000);
+      const local = new Date(d.getTime() - d.getTimezoneOffset() * 60000);
+      arr.push(local.toISOString().slice(0,10));
+    }
+    return arr;
+  }
+
+  function getFilteredVisitors() {
+    const from = document.getElementById("filter-from").value;
+    const to = document.getElementById("filter-to").value;
+    return visitors.filter(v => {
+      const day = getLocalYMD(v.timestamp);
+      if (!day) return false;
+      if (from && day < from) return false;
+      if (to && day > to) return false;
+      return true;
+    });
+  }
+
+  function updateKpis() {
+    const filtered = getFilteredVisitors();
+    document.getElementById("stat-range-total").textContent = filtered.length;
+    document.getElementById("stat-range-open").textContent = filtered.filter(v => !v.checkout).length;
+
+    const today = todayYMD();
+    document.getElementById("stat-today").textContent =
+      visitors.filter(v => getLocalYMD(v.timestamp) === today).length;
+
+    const last7 = new Set(lastNDaysYMD(7));
+    document.getElementById("stat-week").textContent =
+      visitors.filter(v => last7.has(getLocalYMD(v.timestamp))).length;
+
+    const durations = [];
+    for (const v of filtered) {
+      if (v.timestamp && v.checkout) {
+        const start = new Date(v.timestamp), end = new Date(v.checkout);
+        if (!isNaN(start) && !isNaN(end) && end > start) durations.push((end - start) / 60000);
+      }
+    }
+    let avgText = "n/a";
+    if (durations.length) {
+      const avg = durations.reduce((a,b)=>a+b,0) / durations.length;
+      avgText = avg < 60 ? `${avg.toFixed(0)} Min` : `${(avg/60).toFixed(1)} Std`;
+    }
+    document.getElementById("stat-avg-duration").textContent = avgText;
+  }
+
+  // -- self-contained canvas bar chart (no external library) --
+  function roundRectTop(ctx, x, y, w, h, r) {
+    r = Math.max(0, Math.min(r, w/2, h));
+    ctx.beginPath();
+    ctx.moveTo(x, y + h);
+    ctx.lineTo(x, y + r);
+    ctx.arcTo(x, y, x + r, y, r);
+    ctx.lineTo(x + w - r, y);
+    ctx.arcTo(x + w, y, x + w, y + r, r);
+    ctx.lineTo(x + w, y + h);
+    ctx.closePath();
+  }
+
+  function drawChart() {
+    const canvas = document.getElementById("chart");
+    const { labels, data } = lastChart;
+    const dpr = window.devicePixelRatio || 1;
+    const cssW = canvas.clientWidth || 600;
+    const cssH = 260;
+    canvas.width = cssW * dpr;
+    canvas.height = cssH * dpr;
+    const ctx = canvas.getContext("2d");
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, cssW, cssH);
+
+    const padL = 42, padR = 14, padT = 22, padB = 42;
+    const w = cssW - padL - padR;
+    const h = cssH - padT - padB;
+    const max = Math.max(1, ...data);
+
+    ctx.font = "11px Outfit, sans-serif";
+    ctx.strokeStyle = "#dde4f0";
+    ctx.fillStyle = "#5e738a";
+    ctx.lineWidth = 1;
+    ctx.textAlign = "right";
+    ctx.textBaseline = "middle";
+    const ticks = 4;
+    for (let i = 0; i <= ticks; i++) {
+      const y = padT + h - (h * i / ticks);
+      ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(padL + w, y); ctx.stroke();
+      ctx.fillText(String(Math.round(max * i / ticks)), padL - 6, y);
+    }
+
+    const n = labels.length;
+    if (!n) {
+      ctx.textAlign = "center";
+      ctx.fillStyle = "#94a3b8";
+      ctx.fillText("Keine Daten im Zeitraum", padL + w / 2, padT + h / 2);
+      return;
+    }
+
+    const slot = w / n;
+    const bw = Math.min(36, slot * 0.62);
+    const step = Math.ceil(n / 12);
+    for (let i = 0; i < n; i++) {
+      const val = data[i];
+      const bh = h * (val / max);
+      const x = padL + slot * i + slot / 2;
+      const y = padT + h - bh;
+
+      ctx.fillStyle = "#1a4fd6";
+      roundRectTop(ctx, x - bw / 2, y, bw, bh, 4);
+      ctx.fill();
+
+      if (val > 0) {
+        ctx.fillStyle = "#0e1e3d";
+        ctx.textAlign = "center"; ctx.textBaseline = "bottom";
+        ctx.fillText(String(val), x, y - 3);
+      }
+      if (i % step === 0) {
+        ctx.fillStyle = "#5e738a";
+        ctx.textAlign = "center"; ctx.textBaseline = "top";
+        ctx.fillText(labels[i].slice(5), x, padT + h + 6);
+      }
+    }
+  }
+
+  function updateChart() {
+    const filtered = getFilteredVisitors();
+    const counts = {};
+    for (const v of filtered) {
+      const day = getLocalYMD(v.timestamp);
+      if (!day) continue;
+      counts[day] = (counts[day] || 0) + 1;
+    }
+    const labels = Object.keys(counts).sort();
+    lastChart = { labels, data: labels.map(d => counts[d]) };
+    drawChart();
+  }
+
+  function renderCountTable(elId, entries, head) {
+    const el = document.getElementById(elId);
+    if (!entries.length) { el.innerHTML = "<p class='muted' style='font-size:0.85rem;'>Keine Daten im Zeitraum.</p>"; return; }
+    let html = `<table><thead><tr><th>${head}</th><th>Anzahl</th></tr></thead><tbody>`;
+    for (const [name, count] of entries) html += `<tr><td>${esc(name)}</td><td>${count}</td></tr>`;
+    html += "</tbody></table>";
+    el.innerHTML = html;
+  }
+
+  function updateCompanyTables() {
+    const filtered = getFilteredVisitors();
+    const tally = (field) => {
+      const m = {};
+      for (const v of filtered) {
+        const key = ((v[field] || "Unbekannt").toString().trim()) || "Unbekannt";
+        m[key] = (m[key] || 0) + 1;
+      }
+      return Object.entries(m).sort((a,b)=>b[1]-a[1]).slice(0,10);
+    };
+    renderCountTable("table-firma", tally("firma"), "Firma");
+    renderCountTable("table-ansprech", tally("ansprechpartner"), "Ansprechpartner");
+  }
+
+  function updateDetailsTable() {
+    const filtered = getFilteredVisitors();
+    const area = document.getElementById("details-area");
+    if (!filtered.length) { area.innerHTML = "<p class='muted' style='font-size:0.85rem;'>Keine Besucher im Zeitraum.</p>"; return; }
+
+    let html = "<table><thead><tr><th>Check-in</th><th>Name</th><th>Firma</th><th>Ansprechpartner</th><th>Grund</th><th>Ausweisnummer</th><th>Checkout</th></tr></thead><tbody>";
+    for (const v of filtered) {
+      html += `<tr>
+        <td>${toLocalDateTime(v.timestamp)}</td>
+        <td>${esc(v.name)}</td>
+        <td>${esc(v.firma)}</td>
+        <td>${esc(v.ansprechpartner)}</td>
+        <td>${esc(v.grund)}</td>
+        <td>${esc(v.ausweisnummer)}</td>
+        <td>${v.checkout ? toLocalDateTime(v.checkout) : "-"}</td>
+      </tr>`;
+    }
+    html += "</tbody></table>";
+    area.innerHTML = html;
+  }
+
+  function exportCsv() {
+    const filtered = getFilteredVisitors();
+    if (!filtered.length) { alert("Keine Daten für Export im aktuellen Zeitraum."); return; }
+    const rows = [
+      ["Check-in","Name","Firma","Ansprechpartner","Grund","Ausweisnummer","Checkout"],
+      ...filtered.map(v => [
+        toLocalDateTime(v.timestamp), v.name || "", v.firma || "", v.ansprechpartner || "",
+        v.grund || "", v.ausweisnummer || "", v.checkout ? toLocalDateTime(v.checkout) : ""
+      ])
+    ];
+    const csv = rows.map(r => r.map(x => `"${String(x).replace(/"/g,'""')}"`).join(";")).join("\r\n");
+    const blob = new Blob([csv], { type:"text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = "besucher_statistik.csv"; a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function applyFilters() {
+    updateKpis();
+    updateChart();
+    updateCompanyTables();
+    updateDetailsTable();
+  }
+
+  function clearFilters() {
+    document.getElementById("filter-from").value = "";
+    document.getElementById("filter-to").value = "";
+    applyFilters();
+  }
+
+  function applyRole(){
+    const role = localStorage.getItem("sessionRole");
+    const adminLink = document.getElementById("link-admin");
+    if (adminLink && role !== "admin") adminLink.style.display = "none";
+  }
+
+  async function load() {
+    const res = await apiFetch("/visitors");
+    if (!res) return;
+    visitors = await res.json();
+
+    const last7 = lastNDaysYMD(7);
+    document.getElementById("filter-from").value = last7[last7.length-1];
+    document.getElementById("filter-to").value = last7[0];
+
+    applyRole();
+    applyFilters();
+  }
+
+  window.addEventListener("resize", drawChart);
+  load();
+</script>
+</body>
+</html>

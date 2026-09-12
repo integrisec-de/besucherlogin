@@ -1,0 +1,10 @@
+{
+  "name": "besucherlogin",
+  "version": "1.0.0",
+  "license": "Apache-2.0",
+  "type": "module",
+  "description": "integrisec Besuchermanagement – single-tenant, portable (Cloudflare Pages / Node inhouse)",
+  "scripts": {
+    "start": "node --experimental-sqlite server.mjs"
+  }
+}

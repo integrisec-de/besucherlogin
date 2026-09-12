@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <title>Login – Besuchermanagement</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="icon" href="/assets/favicon.ico" sizes="any" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png" />
+  <link rel="stylesheet" href="/assets/app.css" />
+  <script src="/branding.js" defer></script>
+</head>
+<body class="login">
+  <div class="login-card">
+    <img class="login-logo" src="/assets/logo.svg" alt="Besucherlogin" />
+    <h2>Anmeldung</h2>
+    <p class="sub">Besuchermanagement</p>
+
+    <div id="demo-hint" style="display:none;background:var(--cyan-lt);color:var(--cyan-dark);border:1px solid var(--cyan);border-radius:8px;padding:8px 10px;font-size:0.82rem;text-align:center;margin-bottom:14px;">
+      Demo-Zugang: <strong>demo</strong> / <strong>demo</strong>
+    </div>
+
+    <label for="username">Benutzername</label>
+    <input id="username" autocomplete="username" />
+
+    <label for="password">Passwort</label>
+    <input id="password" type="password" autocomplete="current-password" />
+
+    <div id="code-row" style="display:none;">
+      <label for="code">2FA-Code</label>
+      <input id="code" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="123456" />
+    </div>
+
+    <div id="msg" class="status error"></div>
+
+    <button id="login-btn" onclick="login()">Anmelden</button>
+  </div>
+
+<script>
+async function login() {
+  const btn = document.getElementById("login-btn");
+  const msg = document.getElementById("msg");
+  msg.textContent = "";
+  btn.disabled = true;
+
+  const username = document.getElementById("username").value.trim();
+  const password = document.getElementById("password").value;
+  const code = document.getElementById("code").value.trim();
+
+  if (!username || !password) {
+    msg.textContent = "Bitte Benutzername und Passwort eingeben.";
+    btn.disabled = false;
+    return;
+  }
+
+  const payload = { username, password };
+  if (code) payload.code = code;
+
+  try {
+    const res = await fetch("/auth/login", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+
+    if (!res.ok) {
+      let err = null;
+      try { err = await res.json(); } catch {}
+      if (err && err.error === "2fa_required") {
+        document.getElementById("code-row").style.display = "block";
+        document.getElementById("code").focus();
+        msg.className = "status";
+        msg.textContent = "Bitte den 2FA-Code aus deiner App eingeben.";
+        btn.disabled = false;
+        return;
+      }
+      msg.className = "status error";
+      msg.textContent = (err && err.error === "2fa_invalid") ? "2FA-Code falsch." : "Login fehlgeschlagen.";
+      btn.disabled = false;
+      return;
+    }
+
+    const data = await res.json();
+    localStorage.setItem("sessionToken", data.token);
+    if (data.role) localStorage.setItem("sessionRole", data.role);
+    if (data.username) localStorage.setItem("sessionUser", data.username);
+
+    window.location.href = "/";
+  } catch (e) {
+    console.error(e);
+    msg.textContent = "Fehler bei der Anmeldung.";
+    btn.disabled = false;
+  }
+}
+
+// Enter-Taste löst Login aus
+document.addEventListener("keydown", e => {
+  if (e.key === "Enter") login();
+});
+</script>
+</body>
+</html>

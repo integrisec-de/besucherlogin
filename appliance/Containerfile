@@ -1,0 +1,55 @@
+# Besucherlogin – On-Prem-Appliance-Image (integrisec)
+# ----------------------------------------------------------------------------
+# Schlank & reproduzierbar. KEIN Build-Step, KEINE nativen Module:
+# die SQLite-Anbindung nutzt das in Node eingebaute `node:sqlite` (DatabaseSync),
+# und package.json hat null Dependencies -> kein npm install, keine musl-Frage.
+# Debian-slim (glibc) ist die sichere Wahl, weil node:sqlite noch experimentell ist.
+#
+# Bauen (aus dem Repo-Root):
+#   podman build -f appliance/Containerfile -t besucherlogin:dev .
+# ----------------------------------------------------------------------------
+FROM node:24-slim
+# Für bit-genaue Reproduzierbarkeit den Base-Layer per Digest pinnen, z. B.:
+#   FROM node:24-slim@sha256:<digest>
+
+LABEL org.opencontainers.image.title="Besucherlogin" \
+      org.opencontainers.image.vendor="integrisec" \
+      org.opencontainers.image.source="https://github.com/integrisec-de/besucherlogin" \
+      org.opencontainers.image.description="DSGVO-konformes Besuchermanagement (Node + node:sqlite), self-hosted"
+
+ENV NODE_ENV=production \
+    PORT=8787 \
+    HTTPS_PORT=8443 \
+    DB_PATH=/data/besucher.db \
+    TLS_DIR=/data/tls
+
+WORKDIR /app
+
+# Nur die Runtime-Dateien – explizit, damit nichts Fremdes ins Image gerät.
+# package.json ist nötig: "type":"module" lässt functions/[[path]].js als ESM laden.
+COPY server.mjs package.json ./
+COPY functions/ ./functions/
+COPY assets/ ./assets/
+COPY branding.js qrcode.js ./
+COPY *.html ./
+
+# Attributionshinweise der Fremdbestandteile müssen mit ausgeliefert werden
+# (OFL/MIT). Die Font-Lizenzen reisen bereits über COPY assets/ mit.
+COPY NOTICE ./
+
+# Persistente Daten liegen AUSSERHALB des Images auf einem gemounteten Volume.
+VOLUME ["/data"]
+
+# Dedizierter, hoher Non-Root-UID (vermeidet Kollision mit Host-Benutzern).
+# Das Host-Datenverzeichnis wird im setup.sh auf diese UID ge-chownt.
+RUN useradd --system --uid 10001 --no-create-home --shell /usr/sbin/nologin besucherlogin \
+ && mkdir -p /data && chown 10001:10001 /data
+USER 10001
+
+EXPOSE 8787 8443
+
+# Health: der öffentliche /branding-Endpunkt über HTTPS (self-signed -> Cert-Prüfung aus).
+HEALTHCHECK --interval=30s --timeout=5s --start-period=25s --retries=3 \
+  CMD ["node","-e","process.env.NODE_TLS_REJECT_UNAUTHORIZED='0';fetch('https://127.0.0.1:'+(process.env.HTTPS_PORT||8443)+'/branding').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+
+CMD ["node","--experimental-sqlite","server.mjs"]

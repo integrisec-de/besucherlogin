@@ -1,0 +1,222 @@
+/* ============================================================
+   integrisec Besuchermanagement – gemeinsames Stylesheet
+   Corporate Identity von integrisec (helles Theme, Outfit-Font).
+   Fonts lokal gehostet -> DSGVO-konform, keine externen Requests.
+   ============================================================ */
+
+@font-face { font-family:'Outfit'; font-style:normal; font-weight:400; font-display:swap; src:url('/assets/fonts/outfit-400.woff2') format('woff2'); }
+@font-face { font-family:'Outfit'; font-style:normal; font-weight:500; font-display:swap; src:url('/assets/fonts/outfit-500.woff2') format('woff2'); }
+@font-face { font-family:'Outfit'; font-style:normal; font-weight:600; font-display:swap; src:url('/assets/fonts/outfit-600.woff2') format('woff2'); }
+@font-face { font-family:'Outfit'; font-style:normal; font-weight:700; font-display:swap; src:url('/assets/fonts/outfit-700.woff2') format('woff2'); }
+@font-face { font-family:'Outfit'; font-style:normal; font-weight:800; font-display:swap; src:url('/assets/fonts/outfit-800.woff2') format('woff2'); }
+
+:root {
+  --bg:        #ffffff;
+  --bg2:       #f4f7fb;
+  --bg3:       #eaeff7;
+  --navy:      #0e1e3d;
+  --navy2:     #172f5e;
+  --blue:      #1a4fd6;
+  --blue-lt:   #e8effc;
+  --cyan:      #00c896;
+  --cyan-dark: #007a5e;
+  --cyan-lt:   #e0faf3;
+  --text:      #18243a;
+  --muted:     #5e738a;
+  --light:     #94a3b8;
+  --border:    #dde4f0;
+  --danger:    #dc2626;
+  --danger-lt: #fef2f2;
+  --font:      'Outfit', system-ui, -apple-system, "Segoe UI", sans-serif;
+  --sh:        0 2px 8px rgba(14,30,61,0.07), 0 12px 32px rgba(14,30,61,0.06);
+  --sh-lg:     0 4px 12px rgba(14,30,61,0.08), 0 24px 48px rgba(14,30,61,0.12);
+  --radius:    10px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* Branding-Loader unterdrückt Transitions kurz, während er das Theme setzt,
+   damit transitionierte Eigenschaften die neuen Variablen sofort übernehmen. */
+html.branding-swap, html.branding-swap * { transition: none !important; }
+
+/* Demo-Umgebung: Hinweisbanner */
+.demo-banner { background: var(--cyan-lt); color: var(--cyan-dark); text-align: center; font-size: 0.85rem; font-weight: 600; padding: 9px 14px; border: 1px solid var(--cyan); border-radius: 8px; margin-bottom: 16px; }
+
+body {
+  font-family: var(--font);
+  background: var(--bg2);
+  color: var(--text);
+  font-size: 15px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  padding: 20px;
+}
+
+.container { max-width: 1600px; margin: 0 auto; }
+
+/* ---- Headings ---- */
+h1 { font-size: 1.6rem; font-weight: 800; color: var(--navy); letter-spacing: -0.5px; margin-bottom: 4px; }
+h2 { font-size: 1.15rem; font-weight: 700; color: var(--navy); letter-spacing: -0.3px; }
+h3 { font-size: 1rem; font-weight: 700; color: var(--navy); }
+p.sub, .muted { color: var(--muted); font-size: 0.88rem; }
+
+a { color: var(--blue); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* ---- Topbar / brand ---- */
+.topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px; flex-wrap: wrap;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 18px;
+  box-shadow: var(--sh);
+  margin-bottom: 20px;
+}
+.brand { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+.brand:hover { text-decoration: none; }
+.brand-logo { height: 30px; width: auto; display: block; }
+.brand-sep { width: 1px; height: 24px; background: var(--border); }
+.brand-title { font-size: 1.05rem; font-weight: 700; color: var(--navy); letter-spacing: -0.3px; }
+.nav-links { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.nav-links a, .nav-links .session-timer {
+  font-size: 0.9rem; color: var(--text); padding: 7px 12px; border-radius: 7px;
+}
+.nav-links a:hover { background: var(--bg2); color: var(--blue); text-decoration: none; }
+.session-timer { color: var(--muted); font-variant-numeric: tabular-nums; }
+
+/* ---- Cards ---- */
+.card {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 18px 20px;
+  box-shadow: var(--sh);
+  margin-bottom: 18px;
+}
+.card > h2:first-child, .card > h3:first-child { margin-top: 0; }
+
+/* ---- Forms ---- */
+label { display: block; font-size: 0.82rem; font-weight: 500; color: var(--muted); margin-bottom: 4px; }
+label.inline { display: inline-flex; align-items: center; gap: 7px; font-weight: 500; color: var(--text); }
+input, select, textarea {
+  width: 100%;
+  padding: 9px 11px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 0.9rem;
+  margin-bottom: 10px;
+}
+input[type="checkbox"] { width: auto; margin: 0; accent-color: var(--blue); }
+input:focus, select:focus, textarea:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px var(--blue-lt); }
+textarea { resize: vertical; min-height: 64px; }
+
+/* ---- Buttons ---- */
+button {
+  font-family: var(--font);
+  padding: 9px 16px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background-color: var(--blue);
+  color: #fff;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s, border-color 0.15s;
+}
+button:hover:not(:disabled) { background-color: var(--navy); }
+button:disabled { opacity: 0.45; cursor: not-allowed; }
+button.btn-secondary { background-color: #fff; color: var(--text); border-color: var(--border); }
+button.btn-secondary:hover:not(:disabled) { background-color: var(--bg2); color: var(--blue); border-color: var(--blue); }
+button.btn-danger { background-color: var(--danger); }
+button.btn-danger:hover:not(:disabled) { background-color: #991b1b; }
+button.btn-small { padding: 5px 10px; font-size: 0.8rem; }
+
+/* ---- Tables ---- */
+table { width: 100%; border-collapse: collapse; font-size: 0.86rem; }
+th, td { padding: 8px 10px; border-bottom: 1px solid var(--border); vertical-align: top; text-align: left; }
+th { background: var(--bg2); color: var(--muted); font-weight: 600; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.03em; white-space: nowrap; }
+tbody tr:hover { background: var(--bg2); }
+
+/* ---- Status messages ---- */
+.status { font-size: 0.83rem; min-height: 1.1em; margin-top: 6px; }
+.status.error { color: var(--danger); }
+.status.ok { color: var(--cyan-dark); }
+
+/* ---- Pills / badges ---- */
+.pill-open, .pill-closed { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 0.74rem; font-weight: 600; }
+.pill-open { background: var(--cyan-lt); color: var(--cyan-dark); }
+.pill-closed { background: var(--bg3); color: var(--muted); }
+.actions { display: flex; gap: 6px; flex-wrap: wrap; }
+
+.badge-action {
+  display: inline-block; padding: 2px 9px; border-radius: 999px;
+  font-size: 0.7rem; font-weight: 600; letter-spacing: 0.03em;
+  background: var(--bg3); color: var(--navy2);
+}
+.act-auth { background: var(--blue-lt); color: var(--blue); }
+.act-visitor-create { background: var(--cyan-lt); color: var(--cyan-dark); }
+.act-visitor-update { background: #fef3c7; color: #92400e; }
+.act-visitor-checkout { background: #ffedd5; color: #9a3412; }
+.act-visitor-delete { background: var(--danger-lt); color: var(--danger); }
+
+/* ---- Index layout ---- */
+.layout { display: grid; grid-template-columns: minmax(280px, 340px) 1fr; gap: 18px; align-items: start; }
+@media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
+.filter-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 4px 0 8px; }
+.filter-row input[type="text"] { margin-bottom: 0; max-width: 260px; }
+.summary { font-size: 0.8rem; color: var(--muted); margin-top: 4px; }
+
+/* ---- Stats ---- */
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; }
+.stat-box { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 14px; }
+.stat-label { font-size: 0.82rem; color: var(--muted); margin-bottom: 4px; }
+.stat-value { font-size: 1.7rem; font-weight: 800; color: var(--navy); letter-spacing: -0.5px; }
+.two-col { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+canvas { width: 100% !important; max-height: 280px; margin-top: 10px; }
+
+/* ---- Admin ---- */
+.form-row { display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 12px; align-items: end; }
+.form-row button { height: 38px; }
+@media (max-width: 700px) { .form-row { grid-template-columns: 1fr; } }
+.audit-table { max-height: 360px; overflow-y: auto; margin-top: 8px; border: 1px solid var(--border); border-radius: 8px; }
+.audit-filter-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; margin-bottom: 10px; }
+.audit-filter-row input { margin-bottom: 0; }
+.setting-row { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end; }
+.setting-row > div { display: flex; flex-direction: column; }
+.setting-row input[type="number"] { max-width: 150px; }
+
+/* ---- Branding / colour palette editor ---- */
+.palette { display: flex; flex-direction: column; gap: 8px; max-width: 440px; }
+.pal-row { display: flex; align-items: center; gap: 10px; }
+.pal-row input[type="color"] { width: 40px; height: 32px; padding: 2px; border: 1px solid var(--border); border-radius: 6px; background: #fff; cursor: pointer; margin: 0; }
+.pal-row .hex-input { width: 96px; margin: 0; font-family: ui-monospace, monospace; }
+.pal-row .pal-label { font-size: 0.85rem; color: var(--muted); }
+
+/* ---- Login ---- */
+body.login { display: flex; align-items: flex-start; justify-content: center; min-height: 100vh; padding-top: 84px; background: var(--bg2); }
+.login-card { width: 100%; max-width: 380px; background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 28px 26px 24px; box-shadow: var(--sh-lg); }
+.login-logo { display: block; height: 38px; width: auto; margin: 0 auto 20px; }
+.login-card h2 { text-align: center; margin-bottom: 4px; }
+.login-card .sub { text-align: center; margin-bottom: 20px; }
+.login-card button { width: 100%; margin-top: 6px; }
+
+/* ============================================================
+   Responsive – Tablet & Mobile (Bedienung z. B. am Empfangs-Tablet)
+   ============================================================ */
+/* Grid-Items dürfen schrumpfen, sonst dehnt eine breite Tabelle die
+   ganze Seite, statt im eigenen Scroll-Container (overflow-x) zu scrollen. */
+.layout > * { min-width: 0; }
+
+/* Breite Datentabellen scrollen horizontal in ihrem Kasten. */
+#users-area, .audit-table { overflow-x: auto; }
+
+/* Auf schmalen Geräten etwas mehr nutzbare Breite. */
+@media (max-width: 560px) {
+  body { padding: 12px; }
+  .card { padding: 16px 14px; }
+}

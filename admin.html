@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <title>Admin – Besuchermanagement</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="icon" href="/assets/favicon.ico" sizes="any" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png" />
+  <link rel="stylesheet" href="/assets/app.css" />
+  <script src="/branding.js" defer></script>
+  <script src="/qrcode.js" defer></script>
+</head>
+<body>
+
+<div class="container">
+
+  <header class="topbar">
+    <a class="brand" href="/">
+      <img class="brand-logo" src="/assets/logo.svg" alt="Besucherlogin" />
+      <span class="brand-sep"></span>
+      <span class="brand-title">Admin</span>
+    </a>
+    <nav class="nav-links">
+      <span id="sessionTimer" class="session-timer"></span>
+      <a href="/">Besucher</a>
+      <a href="/stats">Statistik</a>
+      <a href="#" onclick="changePassword();return false;">Passwort ändern</a>
+      <a href="#" onclick="logout();return false;">Logout</a>
+    </nav>
+  </header>
+
+  <h1>Adminbereich</h1>
+
+  <div class="card">
+    <h2>Benutzer</h2>
+    <div id="users-area"><p class="muted">Benutzer werden geladen...</p></div>
+  </div>
+
+  <div class="card">
+    <h2>Neuen Benutzer anlegen</h2>
+    <div class="form-row">
+      <div>
+        <label>Benutzername</label>
+        <input type="text" id="new-username" />
+      </div>
+      <div>
+        <label>Passwort</label>
+        <input type="password" id="new-password" />
+      </div>
+      <div>
+        <label>Rolle</label>
+        <select id="new-role">
+          <option value="user">User (nur Besucher)</option>
+          <option value="admin">Admin (alles)</option>
+        </select>
+      </div>
+      <div>
+        <button type="button" onclick="createUser()">Anlegen</button>
+      </div>
+    </div>
+    <div id="admin-status" class="status"></div>
+  </div>
+
+  <div class="card">
+    <h2>Einstellungen</h2>
+
+    <h3 style="margin-top:14px;">Session</h3>
+    <div class="setting-row">
+      <div>
+        <label>Session-Timeout (Minuten)</label>
+        <input type="number" id="session-ttl" min="1" step="1" />
+      </div>
+    </div>
+
+    <h3 style="margin-top:20px;">Datenschutz / Aufbewahrung</h3>
+    <p class="muted" style="margin-bottom:12px;">
+      Besucherdaten werden nach Ablauf der Frist automatisch gelöscht (DSGVO – Speicherbegrenzung, Art. 5).
+    </p>
+    <div class="setting-row">
+      <div>
+        <label class="inline" style="margin-bottom:0;">
+          <input type="checkbox" id="retention-enabled" /> Automatische Löschung aktiv
+        </label>
+      </div>
+      <div>
+        <label>Aufbewahrungsfrist (Tage)</label>
+        <input type="number" id="retention-days" min="1" step="1" />
+      </div>
+    </div>
+
+    <div style="margin-top:14px;">
+      <button type="button" onclick="saveSettings()">Einstellungen speichern</button>
+    </div>
+    <div id="config-status" class="status"></div>
+  </div>
+
+  <div class="card">
+    <h2>Erscheinungsbild (Branding)</h2>
+    <p class="muted" style="margin-bottom:14px;">Logo &amp; Farben für diese Installation. Das Logo wird per URL eingebunden (nicht lokal gespeichert). Die Schriften werden lokal ausgeliefert und sind hier nicht einstellbar.</p>
+
+    <div style="margin-bottom:16px;">
+      <label for="brand-logo-url">Logo-URL</label>
+      <input type="url" id="brand-logo-url" placeholder="https://…/logo.png" oninput="updateLogoPreview()" />
+      <div style="margin-top:6px;display:flex;align-items:center;gap:10px;">
+        <span class="muted" style="font-size:0.8rem;">Vorschau:</span>
+        <img id="brand-logo-preview" alt="Logo-Vorschau" style="height:32px;display:none;background:var(--bg2);border-radius:6px;padding:2px 6px;" />
+        <span id="brand-logo-fallback" class="muted" style="font-size:0.8rem;">(leer → Standard-Logo)</span>
+      </div>
+    </div>
+
+    <label>Farbpalette</label>
+    <div id="palette" class="palette"></div>
+
+    <div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap;">
+      <button type="button" onclick="saveBranding()">Branding speichern</button>
+      <button type="button" class="btn-secondary" onclick="resetBranding()">Auf Standard zurücksetzen</button>
+    </div>
+    <div id="brand-status" class="status"></div>
+  </div>
+
+  <div class="card">
+    <h2>TLS / Zertifikat</h2>
+    <p class="muted" style="margin-bottom:12px;">HTTPS stellt die Anwendung selbst bereit. Standard ist ein selbstsigniertes Zertifikat (Browser-Warnung). Für ein „grünes Schloss" fügen Sie Ihr eigenes Zertifikat (z. B. Wildcard oder Firmen-CA) als PEM ein.</p>
+    <div id="tls-status" class="status" style="margin-bottom:14px;">Status wird geladen…</div>
+    <div class="form-row" style="grid-template-columns:1fr 1fr;">
+      <div>
+        <label for="tls-cert">Zertifikat (PEM, ggf. inkl. Kette)</label>
+        <textarea id="tls-cert" placeholder="-----BEGIN CERTIFICATE-----…" style="min-height:120px;font-family:ui-monospace,monospace;font-size:0.78rem;"></textarea>
+      </div>
+      <div>
+        <label for="tls-key">Privater Schlüssel (PEM)</label>
+        <textarea id="tls-key" placeholder="-----BEGIN PRIVATE KEY-----…" style="min-height:120px;font-family:ui-monospace,monospace;font-size:0.78rem;"></textarea>
+      </div>
+    </div>
+    <div style="margin-top:8px;">
+      <button type="button" onclick="saveTls()">Zertifikat übernehmen</button>
+    </div>
+    <div id="tls-msg" class="status"></div>
+  </div>
+
+  <div class="card">
+    <h2>Backup &amp; Wiederherstellung</h2>
+    <p class="muted" style="margin-bottom:14px;">Verschlüsseltes Voll-Backup aller Daten. <strong>Passphrase gut aufbewahren</strong> — ohne sie ist das Backup unbrauchbar.</p>
+
+    <h3>Backup herunterladen</h3>
+    <div class="setting-row" style="margin-bottom:6px;">
+      <div>
+        <label for="backup-pass">Passphrase (mind. 6 Zeichen)</label>
+        <input type="password" id="backup-pass" />
+      </div>
+      <button type="button" onclick="doBackup()">Herunterladen</button>
+    </div>
+    <div id="backup-msg" class="status"></div>
+
+    <h3 style="margin-top:20px;">Wiederherstellen</h3>
+    <p class="muted" style="margin-bottom:10px;">Ersetzt alle aktuellen Daten. Vorher wird automatisch ein Rücksetz-Snapshot angelegt.</p>
+    <div class="setting-row" style="margin-bottom:6px;">
+      <div>
+        <label for="restore-file">Backup-Datei (.bak)</label>
+        <input type="file" id="restore-file" accept=".bak,text/plain" style="padding:6px;" />
+      </div>
+      <div>
+        <label for="restore-pass">Passphrase</label>
+        <input type="password" id="restore-pass" />
+      </div>
+      <button type="button" class="btn-danger" onclick="doRestore()">Wiederherstellen</button>
+    </div>
+    <div style="margin-top:8px;">
+      <button type="button" class="btn-secondary btn-small" onclick="doRollback()">Letzte Wiederherstellung rückgängig</button>
+    </div>
+    <div id="restore-msg" class="status"></div>
+
+    <h3 style="margin-top:20px;">Besucher importieren (CSV)</h3>
+    <p class="muted" style="margin-bottom:10px;">Spalten u.&nbsp;a. Name, Firma, Ansprechpartner, Grund, Ausweisnummer (mit Kopfzeile; Semikolon oder Komma). Fügt Datensätze hinzu.</p>
+    <div class="setting-row" style="margin-bottom:6px;">
+      <div>
+        <label for="import-file">CSV-Datei</label>
+        <input type="file" id="import-file" accept=".csv,text/csv,text/plain" style="padding:6px;" />
+      </div>
+      <button type="button" onclick="doImport()">Importieren</button>
+    </div>
+    <div id="import-msg" class="status"></div>
+  </div>
+
+  <div class="card">
+    <h2>Zwei-Faktor-Authentisierung (2FA)</h2>
+    <p class="muted" style="margin-bottom:14px;">TOTP per Authenticator-App (z.&nbsp;B. Google Authenticator, Aegis). Gilt für dein Konto „<span id="twofa-user"></span>".</p>
+
+    <div id="twofa-status" class="muted" style="margin-bottom:12px;">Status wird geladen…</div>
+
+    <div id="twofa-off" style="display:none;">
+      <button type="button" onclick="twofaSetup()">2FA aktivieren</button>
+    </div>
+
+    <div id="twofa-enroll" style="display:none;">
+      <div style="display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start;">
+        <div id="twofa-qr" style="background:#fff;border:1px solid var(--border);border-radius:8px;padding:10px;line-height:0;"></div>
+        <div style="flex:1;min-width:240px;">
+          <p class="muted" style="font-size:0.85rem;margin-bottom:8px;">QR-Code scannen <em>oder</em> Secret manuell eintragen:</p>
+          <div id="twofa-secret" style="font-family:ui-monospace,monospace;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:8px 10px;word-break:break-all;font-size:0.85rem;margin-bottom:14px;"></div>
+          <label for="twofa-code">6-stelliger Code aus der App</label>
+          <input type="text" id="twofa-code" inputmode="numeric" maxlength="6" placeholder="123456" style="max-width:160px;" />
+          <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
+            <button type="button" onclick="twofaEnable()">Bestätigen &amp; aktivieren</button>
+            <button type="button" class="btn-secondary" onclick="twofaCancel()">Abbrechen</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="twofa-on" style="display:none;">
+      <p style="color:var(--cyan-dark);font-weight:600;margin-bottom:12px;">✓ 2FA ist für dein Konto aktiv.</p>
+      <button type="button" class="btn-danger" onclick="twofaDisable()">2FA deaktivieren</button>
+    </div>
+
+    <div id="twofa-msg" class="status"></div>
+  </div>
+
+  <div class="card">
+    <h2>Audit-Log</h2>
+    <p class="muted">Letzte Änderungen (max. 50 Einträge, neueste zuerst).</p>
+
+    <div class="audit-filter-row">
+      <div>
+        <label for="audit-date-from">Von</label>
+        <input type="date" id="audit-date-from" />
+      </div>
+      <div>
+        <label for="audit-date-to">Bis</label>
+        <input type="date" id="audit-date-to" />
+      </div>
+      <div>
+        <label for="audit-user-filter">Benutzer</label>
+        <input type="text" id="audit-user-filter" placeholder="Filter Benutzername" />
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button type="button" onclick="loadAudit()">Neu laden</button>
+        <button type="button" class="btn-small" onclick="exportAuditCsv()">CSV Export</button>
+      </div>
+    </div>
+
+    <div id="audit-status" class="status"></div>
+    <div id="audit-area" class="audit-table"><p class="muted" style="padding:10px;">Audit-Log wird geladen...</p></div>
+  </div>
+
+</div>
+
+<script>
+  let sessionTTL = 0;
+  let sessionExpireAt = 0;
+  let auditData = [];
+
+  function getToken() { return localStorage.getItem("sessionToken"); }
+  function getRole() { return localStorage.getItem("sessionRole"); }
+
+  async function apiFetch(url, options = {}) {
+    const token = getToken();
+    if (!token) { location.href = "/login"; return; }
+    options.headers = Object.assign({}, options.headers || {}, { "x-session-token": token });
+
+    const res = await fetch(url, options);
+    if (res.status === 401) { alert("Session abgelaufen."); logout(); return; }
+    sessionExpireAt = Date.now() + sessionTTL;
+    return res;
+  }
+
+  function startTimer() {
+    setInterval(() => {
+      if (!sessionTTL || !sessionExpireAt) return;
+      const remain = Math.max(0, sessionExpireAt - Date.now());
+      const mins = Math.floor(remain / 60000);
+      const secs = Math.floor((remain % 60000) / 1000);
+      document.getElementById("sessionTimer").textContent =
+        `Session: ${String(mins).padStart(2,"0")}:${String(secs).padStart(2,"0")}`;
+      if (remain <= 0) { alert("Session ist abgelaufen."); logout(); }
+    }, 1000);
+  }
+
+  function formatDateTime(ts) {
+    const d = new Date(ts);
+    if (isNaN(d)) return ts || "";
+    return d.toLocaleString([], { year:"numeric", month:"2-digit", day:"2-digit", hour:"2-digit", minute:"2-digit" });
+  }
+
+  function esc(s){
+    return (s == null ? "" : String(s)).replace(/[&<>"']/g, c => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+    }[c]));
+  }
+
+  function actionClass(action) {
+    if (action.startsWith("auth.")) return "act-auth";
+    if (action === "visitor.create") return "act-visitor-create";
+    if (action === "visitor.update") return "act-visitor-update";
+    if (action === "visitor.checkout") return "act-visitor-checkout";
+    if (action === "visitor.delete") return "act-visitor-delete";
+    return "act-auth";
+  }
+
+  async function loadUsers() {
+    const area = document.getElementById("users-area");
+    area.innerHTML = "<p class='muted'>Lade Benutzer...</p>";
+    const res = await apiFetch("/auth/users");
+    if (!res) return;
+    if (!res.ok) { area.innerHTML = "<p class='muted'>Fehler beim Laden.</p>"; return; }
+    const users = await res.json();
+
+    let html = "<table><thead><tr><th>Benutzername</th><th>Rolle</th><th>Aktionen</th></tr></thead><tbody>";
+    users.forEach(u => {
+      html += `
+        <tr>
+          <td>${esc(u.username)}</td>
+          <td>${esc(u.role)}</td>
+          <td>${
+            u.username === "admin"
+              ? `<span class="muted" style="font-size:0.8rem;">System-Admin</span>`
+              : `<button class="btn-danger btn-small" type="button" onclick="deleteUser('${esc(u.username)}')">Löschen</button>`
+          }</td>
+        </tr>`;
+    });
+    html += "</tbody></table>";
+    area.innerHTML = html;
+  }
+
+  async function createUser() {
+    const status = document.getElementById("admin-status");
+    status.textContent = "";
+
+    const username = document.getElementById("new-username").value.trim();
+    const password = document.getElementById("new-password").value;
+    const role = document.getElementById("new-role").value;
+
+    if (!username || !password) {
+      status.textContent = "Bitte Benutzername + Passwort eingeben.";
+      status.className = "status error";
+      return;
+    }
+
+    const res = await apiFetch("/auth/users", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ username, password, role }),
+    });
+    if (!res) return;
+    if (!res.ok) {
+      status.textContent = (await res.text()) || "Fehler.";
+      status.className = "status error";
+      return;
+    }
+
+    status.textContent = "Benutzer angelegt.";
+    status.className = "status ok";
+    document.getElementById("new-username").value = "";
+    document.getElementById("new-password").value = "";
+    document.getElementById("new-role").value = "user";
+    loadUsers();
+    loadAudit();
+  }
+
+  async function deleteUser(username) {
+    if (!confirm(`Benutzer "${username}" löschen?`)) return;
+    const res = await apiFetch("/auth/users/" + encodeURIComponent(username), { method: "DELETE" });
+    if (!res) return;
+    if (!res.ok) { alert((await res.text()) || "Fehler beim Löschen."); return; }
+    loadUsers();
+    loadAudit();
+  }
+
+  async function logout() {
+    await apiFetch("/auth/logout", { method: "POST" });
+    localStorage.removeItem("sessionToken");
+    localStorage.removeItem("sessionRole");
+    location.href = "/login";
+  }
+
+  async function changePassword() {
+    const oldPwd = prompt("Altes Passwort:");
+    if (oldPwd === null) return;
+    const newPwd = prompt("Neues Passwort (mind. 6 Zeichen):");
+    if (newPwd === null) return;
+    if (!newPwd || newPwd.length < 6) { alert("Neues Passwort ist zu kurz."); return; }
+
+    const res = await apiFetch("/auth/change-password", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ oldPassword: oldPwd, newPassword: newPwd })
+    });
+    if (!res) return;
+    if (!res.ok) { alert((await res.text()) || "Passwort ändern fehlgeschlagen."); return; }
+    alert("Passwort geändert. Bitte erneut einloggen.");
+    await logout();
+  }
+
+  async function loadSettings() {
+    const res = await apiFetch("/settings");
+    if (!res || !res.ok) return;
+    const s = await res.json();
+
+    sessionTTL = (s.sessionTtlMinutes || 480) * 60000;
+    sessionExpireAt = Date.now() + sessionTTL;
+    document.getElementById("session-ttl").value = s.sessionTtlMinutes || 480;
+    document.getElementById("retention-enabled").checked = !!s.retentionEnabled;
+    document.getElementById("retention-days").value = s.retentionDays || 90;
+  }
+
+  async function saveSettings() {
+    const status = document.getElementById("config-status");
+    status.textContent = "";
+
+    const minutes = parseInt(document.getElementById("session-ttl").value, 10);
+    const days = parseInt(document.getElementById("retention-days").value, 10);
+    const enabled = document.getElementById("retention-enabled").checked;
+
+    if (!Number.isFinite(minutes) || minutes <= 0 || !Number.isFinite(days) || days <= 0) {
+      status.textContent = "Ungültige Werte.";
+      status.className = "status error";
+      return;
+    }
+
+    const res = await apiFetch("/settings", {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ sessionTtlMinutes: minutes, retentionEnabled: enabled, retentionDays: days })
+    });
+    if (!res) return;
+    if (!res.ok) {
+      status.textContent = (await res.text()) || "Fehler beim Speichern.";
+      status.className = "status error";
+      return;
+    }
+    status.textContent = "Einstellungen gespeichert.";
+    status.className = "status ok";
+    loadSettings();
+  }
+
+  // ---- Branding (Logo + Farbpalette) ----
+  const BRAND_DEFAULTS = { primary:"#1a4fd6", accent:"#00c896", dark:"#0e1e3d", bg:"#f4f7fb", text:"#18243a" };
+  const PALETTE = [
+    { key:"primary", label:"Primär (Buttons, Links)" },
+    { key:"accent",  label:"Akzent (Highlights)" },
+    { key:"dark",    label:"Dunkel (Topbar, Titel)" },
+    { key:"bg",      label:"Hintergrund" },
+    { key:"text",    label:"Text" }
+  ];
+
+  function renderPalette(theme) {
+    document.getElementById("palette").innerHTML = PALETTE.map(c => {
+      const v = theme[c.key] || "#000000";
+      return `<div class="pal-row">
+        <input type="color" id="col-${c.key}" value="${v}" oninput="syncHex('${c.key}')" />
+        <input type="text" id="hex-${c.key}" value="${v}" maxlength="7" spellcheck="false" oninput="syncColor('${c.key}')" class="hex-input" />
+        <span class="pal-label">${c.label}</span>
+      </div>`;
+    }).join("");
+  }
+  function syncHex(k){ document.getElementById("hex-"+k).value = document.getElementById("col-"+k).value; }
+  function syncColor(k){
+    const v = document.getElementById("hex-"+k).value.trim();
+    if (/^#[0-9a-fA-F]{6}$/.test(v)) document.getElementById("col-"+k).value = v;
+  }
+  function collectTheme(){
+    const t = {};
+    for (const c of PALETTE) {
+      const v = document.getElementById("hex-"+c.key).value.trim();
+      if (!/^#[0-9a-fA-F]{6}$/.test(v)) return { error: c.label };
+      t[c.key] = v;
+    }
+    return { theme: t };
+  }
+  function updateLogoPreview(){
+    const url = document.getElementById("brand-logo-url").value.trim();
+    const img = document.getElementById("brand-logo-preview");
+    const fb = document.getElementById("brand-logo-fallback");
+    if (url) { img.src = url; img.style.display = "inline-block"; fb.style.display = "none"; }
+    else { img.style.display = "none"; fb.style.display = "inline"; }
+  }
+
+  async function loadBranding(){
+    const res = await apiFetch("/settings");
+    if (!res || !res.ok) return;
+    const s = await res.json();
+    document.getElementById("brand-logo-url").value = s.logoUrl || "";
+    renderPalette(s.theme || BRAND_DEFAULTS);
+    updateLogoPreview();
+  }
+
+  async function saveBranding(){
+    const status = document.getElementById("brand-status");
+    status.textContent = "";
+    const logoUrl = document.getElementById("brand-logo-url").value.trim();
+    const c = collectTheme();
+    if (c.error) { status.textContent = "Ungültiger Hex-Wert: " + c.error; status.className = "status error"; return; }
+
+    const res = await apiFetch("/settings", {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ logoUrl, theme: c.theme })
+    });
+    if (!res) return;
+    if (!res.ok) { status.textContent = (await res.text()) || "Fehler."; status.className = "status error"; return; }
+    status.textContent = "Branding gespeichert – Seite wird neu geladen…";
+    status.className = "status ok";
+    setTimeout(() => location.reload(), 600);
+  }
+
+  function resetBranding(){
+    document.getElementById("brand-logo-url").value = "";
+    renderPalette(BRAND_DEFAULTS);
+    updateLogoPreview();
+    const status = document.getElementById("brand-status");
+    status.textContent = "Standard gesetzt – zum Übernehmen „Branding speichern\".";
+    status.className = "status";
+  }
+
+  // ---- 2FA (TOTP) ----
+  function showTwofa(state){
+    document.getElementById("twofa-off").style.display    = state === "off"    ? "block" : "none";
+    document.getElementById("twofa-enroll").style.display = state === "enroll" ? "block" : "none";
+    document.getElementById("twofa-on").style.display     = state === "on"     ? "block" : "none";
+  }
+
+  async function loadTwofa(){
+    document.getElementById("twofa-user").textContent = localStorage.getItem("sessionUser") || "";
+    const res = await apiFetch("/auth/2fa/status");
+    if (!res || !res.ok) return;
+    const s = await res.json();
+    document.getElementById("twofa-status").textContent = s.enabled ? "Aktiviert." : "Nicht aktiviert.";
+    showTwofa(s.enabled ? "on" : "off");
+  }
+
+  async function twofaSetup(){
+    const msg = document.getElementById("twofa-msg"); msg.textContent = "";
+    const res = await apiFetch("/auth/2fa/setup", { method: "POST" });
+    if (!res || !res.ok) { msg.textContent = "Setup fehlgeschlagen."; msg.className = "status error"; return; }
+    const d = await res.json();
+    document.getElementById("twofa-secret").textContent = d.secret;
+    try {
+      const qr = qrcode(0, "M");
+      qr.addData(d.otpauthUri);
+      qr.make();
+      document.getElementById("twofa-qr").innerHTML = qr.createSvgTag(4, 2);
+    } catch (e) {
+      document.getElementById("twofa-qr").textContent = "(QR konnte nicht erzeugt werden – Secret manuell eintragen)";
+    }
+    document.getElementById("twofa-code").value = "";
+    showTwofa("enroll");
+  }
+
+  async function twofaEnable(){
+    const msg = document.getElementById("twofa-msg"); msg.textContent = "";
+    const code = document.getElementById("twofa-code").value.trim();
+    if (!/^\d{6}$/.test(code)) { msg.textContent = "Bitte 6-stelligen Code eingeben."; msg.className = "status error"; return; }
+    const res = await apiFetch("/auth/2fa/enable", {
+      method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ code })
+    });
+    if (!res) return;
+    if (!res.ok) { msg.textContent = (await res.text()) || "Aktivierung fehlgeschlagen."; msg.className = "status error"; return; }
+    msg.textContent = "2FA aktiviert."; msg.className = "status ok";
+    loadTwofa();
+  }
+
+  function twofaCancel(){ document.getElementById("twofa-msg").textContent = ""; loadTwofa(); }
+
+  async function twofaDisable(){
+    const msg = document.getElementById("twofa-msg"); msg.textContent = "";
+    const code = prompt("Zum Deaktivieren bitte aktuellen 6-stelligen Code eingeben:");
+    if (code === null) return;
+    const res = await apiFetch("/auth/2fa/disable", {
+      method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ code: (code || "").trim() })
+    });
+    if (!res) return;
+    if (!res.ok) { msg.textContent = (await res.text()) || "Deaktivierung fehlgeschlagen."; msg.className = "status error"; return; }
+    msg.textContent = "2FA deaktiviert."; msg.className = "status ok";
+    loadTwofa();
+  }
+
+  // ---- Backup / Restore / Import ----
+  async function doBackup() {
+    const msg = document.getElementById("backup-msg"); msg.textContent = "";
+    const pw = document.getElementById("backup-pass").value;
+    if (!pw || pw.length < 6) { msg.textContent = "Passphrase mind. 6 Zeichen."; msg.className = "status error"; return; }
+    const res = await apiFetch("/backup", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ passphrase: pw }) });
+    if (!res) return;
+    if (!res.ok) { msg.textContent = (await res.text()) || "Fehler."; msg.className = "status error"; return; }
+    const d = await res.json();
+    const blob = new Blob([d.backup], { type: "application/octet-stream" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a"); a.href = url; a.download = d.filename; a.click();
+    URL.revokeObjectURL(url);
+    msg.textContent = "Backup heruntergeladen. Passphrase sicher aufbewahren!"; msg.className = "status ok";
+    document.getElementById("backup-pass").value = "";
+  }
+
+  async function doRestore() {
+    const msg = document.getElementById("restore-msg"); msg.textContent = "";
+    const f = document.getElementById("restore-file").files[0];
+    const pw = document.getElementById("restore-pass").value;
+    if (!f) { msg.textContent = "Bitte Backup-Datei wählen."; msg.className = "status error"; return; }
+    if (!pw) { msg.textContent = "Passphrase erforderlich."; msg.className = "status error"; return; }
+    if (!confirm("Wiederherstellen ersetzt ALLE aktuellen Daten. Fortfahren?")) return;
+    const backup = (await f.text()).trim();
+    const res = await apiFetch("/backup/restore", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ passphrase: pw, backup }) });
+    if (!res) return;
+    if (!res.ok) { msg.textContent = (await res.text()) || "Wiederherstellung fehlgeschlagen."; msg.className = "status error"; return; }
+    msg.textContent = "Wiederhergestellt. Seite wird neu geladen…"; msg.className = "status ok";
+    setTimeout(() => location.reload(), 900);
+  }
+
+  async function doRollback() {
+    const msg = document.getElementById("restore-msg"); msg.textContent = "";
+    if (!confirm("Letzte Wiederherstellung rückgängig machen?")) return;
+    const res = await apiFetch("/backup/rollback", { method: "POST" });
+    if (!res) return;
+    if (!res.ok) { msg.textContent = (await res.text()) || "Rollback fehlgeschlagen."; msg.className = "status error"; return; }
+    msg.textContent = "Rückgängig gemacht. Seite wird neu geladen…"; msg.className = "status ok";
+    setTimeout(() => location.reload(), 900);
+  }
+
+  function parseCsv(text) {
+    const lines = text.split(/\r?\n/).filter(l => l.trim().length);
+    if (!lines.length) return [];
+    const splitLine = l => {
+      const out = []; let cur = "", q = false;
+      for (let i = 0; i < l.length; i++) {
+        const c = l[i];
+        if (q) { if (c === '"') { if (l[i + 1] === '"') { cur += '"'; i++; } else q = false; } else cur += c; }
+        else { if (c === '"') q = true; else if (c === ";" || c === ",") { out.push(cur); cur = ""; } else cur += c; }
+      }
+      out.push(cur); return out;
+    };
+    const headers = splitLine(lines[0]).map(h => h.trim().toLowerCase());
+    const idx = n => headers.findIndex(h => h.includes(n));
+    const iName = idx("name"), iFirma = idx("firma"), iAnsp = idx("ansprech"), iGrund = idx("grund"), iAusw = idx("ausweis");
+    const rows = [];
+    for (let i = 1; i < lines.length; i++) {
+      const c = splitLine(lines[i]);
+      const get = j => (j >= 0 && j < c.length) ? c[j].trim() : "";
+      if (!get(iName)) continue;
+      rows.push({ name: get(iName), firma: get(iFirma), ansprechpartner: get(iAnsp), grund: get(iGrund), ausweisnummer: get(iAusw) });
+    }
+    return rows;
+  }
+
+  async function doImport() {
+    const msg = document.getElementById("import-msg"); msg.textContent = "";
+    const f = document.getElementById("import-file").files[0];
+    if (!f) { msg.textContent = "Bitte CSV-Datei wählen."; msg.className = "status error"; return; }
+    const rows = parseCsv(await f.text());
+    if (!rows.length) { msg.textContent = "Keine gültigen Zeilen (Kopfzeile mit 'Name'?)."; msg.className = "status error"; return; }
+    if (!confirm(rows.length + " Besucher importieren?")) return;
+    const res = await apiFetch("/visitors/import", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ rows }) });
+    if (!res) return;
+    if (!res.ok) { msg.textContent = (await res.text()) || "Import fehlgeschlagen."; msg.className = "status error"; return; }
+    const d = await res.json();
+    msg.textContent = d.imported + " Besucher importiert."; msg.className = "status ok";
+    document.getElementById("import-file").value = "";
+  }
+
+  function getLocalYMD(ts) {
+    const d = new Date(ts);
+    if (isNaN(d)) return null;
+    const local = new Date(d.getTime() - d.getTimezoneOffset() * 60000);
+    return local.toISOString().slice(0, 10);
+  }
+
+  function getFilteredAudit() {
+    const from = document.getElementById("audit-date-from").value;
+    const to = document.getElementById("audit-date-to").value;
+    const userFilter = (document.getElementById("audit-user-filter").value || "").toLowerCase();
+
+    return auditData.filter(e => {
+      const day = getLocalYMD(e.timestamp);
+      if (from && (!day || day < from)) return false;
+      if (to && (!day || day > to)) return false;
+      if (userFilter && !(e.username || "").toLowerCase().includes(userFilter)) return false;
+      return true;
+    });
+  }
+
+  function renderAudit() {
+    const area = document.getElementById("audit-area");
+    const list = getFilteredAudit();
+    if (!list.length) { area.innerHTML = "<p class='muted' style='padding:10px;'>Keine Einträge für die aktuellen Filter.</p>"; return; }
+
+    let html = "<table><thead><tr><th>Zeit</th><th>Benutzer</th><th>Aktion</th><th>Details</th></tr></thead><tbody>";
+    list.forEach(e => {
+      html += `
+        <tr>
+          <td>${formatDateTime(e.timestamp)}</td>
+          <td>${esc(e.username) || "-"}</td>
+          <td><span class="badge-action ${actionClass(e.action)}">${esc(e.action)}</span></td>
+          <td>${esc(e.details)}</td>
+        </tr>`;
+    });
+    html += "</tbody></table>";
+    area.innerHTML = html;
+  }
+
+  async function loadAudit() {
+    const status = document.getElementById("audit-status");
+    const area = document.getElementById("audit-area");
+    status.textContent = "";
+    area.innerHTML = "<p class='muted' style='padding:10px;'>Lade Audit-Log...</p>";
+
+    const res = await apiFetch("/auth/audit");
+    if (!res) return;
+    if (!res.ok) {
+      status.textContent = (await res.text()) || "Fehler beim Laden des Audit-Logs.";
+      status.className = "status error";
+      area.innerHTML = "";
+      return;
+    }
+
+    auditData = await res.json();
+    if (!auditData.length) { area.innerHTML = "<p class='muted' style='padding:10px;'>Keine Einträge vorhanden.</p>"; return; }
+    renderAudit();
+  }
+
+  function exportAuditCsv() {
+    const list = getFilteredAudit();
+    if (!list.length) { alert("Keine Audit-Einträge für Export."); return; }
+    const rows = [
+      ["Zeit", "Benutzer", "Aktion", "Details"],
+      ...list.map(e => [formatDateTime(e.timestamp), e.username || "", e.action || "", e.details || ""])
+    ];
+    const csv = rows.map(r => r.map(x => `"${String(x).replace(/"/g, '""')}"`).join(";")).join("\r\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = "audit_log.csv"; a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  async function init() {
+    if (getRole() !== "admin") { location.href = "/"; return; }
+
+    document.getElementById("audit-date-from").addEventListener("change", renderAudit);
+    document.getElementById("audit-date-to").addEventListener("change", renderAudit);
+    document.getElementById("audit-user-filter").addEventListener("input", renderAudit);
+
+    await loadSettings();
+    startTimer();
+    loadUsers();
+    loadAudit();
+    loadBranding();
+    loadTwofa();
+    loadTls();
+  }
+
+  async function loadTls() {
+    const el = document.getElementById("tls-status");
+    const res = await apiFetch("/tls/status");
+    if (!res || !res.ok) { el.className = "status"; el.textContent = ""; return; }
+    const s = await res.json();
+    if (!s.present) { el.className = "status"; el.textContent = "Kein Zertifikat aktiv."; return; }
+    if (s.ok) {
+      const until = s.validTo ? new Date(s.validTo).toLocaleDateString() : "?";
+      const art = s.selfSigned ? "selbstsigniert" : "eigenes Zertifikat";
+      el.className = "status ok";
+      el.textContent = `✓ Zertifikat gültig bis ${until} (${art})`;
+    } else {
+      el.className = "status error";
+      el.textContent = "✗ " + (s.reason || "Zertifikat nicht ok");
+    }
+  }
+
+  async function saveTls() {
+    const msg = document.getElementById("tls-msg"); msg.textContent = "Prüfe…"; msg.className = "status";
+    const cert = document.getElementById("tls-cert").value.trim();
+    const key = document.getElementById("tls-key").value.trim();
+    if (!cert || !key) { msg.textContent = "Zertifikat und Schlüssel einfügen."; msg.className = "status error"; return; }
+    const res = await apiFetch("/tls", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ cert, key }) });
+    if (!res) return;
+    const d = await res.json().catch(() => ({}));
+    if (!res.ok || d.ok === false) { msg.textContent = "✗ " + (d.reason || "Übernahme fehlgeschlagen."); msg.className = "status error"; return; }
+    msg.textContent = "✓ Zertifikat übernommen" + (d.applied ? " (sofort aktiv)." : " (aktiv nach Neustart)."); msg.className = "status ok";
+    document.getElementById("tls-cert").value = ""; document.getElementById("tls-key").value = "";
+    loadTls();
+  }
+
+  init();
+</script>
+
+</body>
+</html>

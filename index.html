@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>Besuchermanagement</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="/assets/favicon.ico" sizes="any" />
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png" />
+<link rel="stylesheet" href="/assets/app.css" />
+<script src="/branding.js" defer></script>
+</head>
+<body>
+<div class="container">
+
+  <header class="topbar">
+    <a class="brand" href="/">
+      <img class="brand-logo" src="/assets/logo.svg" alt="Besucherlogin" />
+      <span class="brand-sep"></span>
+      <span class="brand-title">Besuchermanagement</span>
+    </a>
+    <nav class="nav-links">
+      <a href="/stats">Statistik</a>
+      <a href="/admin" id="link-admin">Admin</a>
+      <a href="#" onclick="logout();return false;">Logout</a>
+    </nav>
+  </header>
+
+  <h1>Besucherübersicht</h1>
+
+  <div class="layout">
+    <!-- Formular -->
+    <div class="card">
+      <h2>Besucher hinzufügen / bearbeiten</h2>
+      <p class="muted" style="margin-bottom:12px;">
+        Erfassung neuer Besucher. Bereits ausgecheckte Besucher können nicht mehr bearbeitet werden.
+      </p>
+      <input type="hidden" id="edit-id">
+      <div>
+        <label for="name">Name *</label>
+        <input id="name" required>
+      </div>
+      <div>
+        <label for="firma">Firma *</label>
+        <input id="firma" required>
+      </div>
+      <div>
+        <label for="ansprechpartner">Ansprechpartner *</label>
+        <input id="ansprechpartner" required>
+      </div>
+      <div>
+        <label for="grund">Grund des Besuchs *</label>
+        <textarea id="grund" required></textarea>
+      </div>
+      <div>
+        <label for="ausweisnummer">Ausweisnummer *</label>
+        <input id="ausweisnummer">
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;">
+        <button type="button" onclick="saveVisitor()">Speichern</button>
+        <button type="button" class="btn-secondary" onclick="resetForm()">Neu</button>
+      </div>
+      <div id="form-status" class="status"></div>
+    </div>
+
+    <!-- Tabelle -->
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">
+        <div>
+          <h2>Aktuelle &amp; historische Besucher</h2>
+          <div id="summary" class="summary"></div>
+        </div>
+        <button type="button" class="btn-secondary" onclick="loadVisitors()">Neu laden</button>
+      </div>
+
+      <div class="filter-row">
+        <input type="text" id="filter-search" placeholder="Suche (Name, Firma, Ansprechpartner, Ausweisnummer)" oninput="renderTable()">
+        <label class="inline">
+          <input type="checkbox" id="filter-open-only" onchange="renderTable()">
+          nur offene Besucher
+        </label>
+      </div>
+
+      <div style="overflow-x:auto;">
+        <table id="tbl"></table>
+      </div>
+      <div id="table-status" class="status"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+let visitors = [];
+
+function formatDate(ts){
+  if (!ts) return "";
+  const d = new Date(ts);
+  if (isNaN(d)) return "";
+  return d.toLocaleString([], {
+    day:"2-digit", month:"2-digit", year:"numeric",
+    hour:"2-digit", minute:"2-digit"
+  });
+}
+
+function esc(s){
+  return (s == null ? "" : String(s)).replace(/[&<>"']/g, c => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  }[c]));
+}
+
+async function api(path, options={}){
+  const token = localStorage.getItem("sessionToken");
+  if (!token){
+    window.location.href = "/login";
+    return;
+  }
+  options.headers = Object.assign({}, options.headers || {}, {
+    "x-session-token": token
+  });
+  const res = await fetch(path, options);
+  if (res.status === 401){
+    localStorage.removeItem("sessionToken");
+    window.location.href = "/login";
+    return;
+  }
+  return res;
+}
+
+async function loadVisitors(){
+  const status = document.getElementById("table-status");
+  status.textContent = "Lade Besucher...";
+  status.className = "status";
+
+  const res = await api("/visitors");
+  if (!res) return;
+  if (!res.ok){
+    status.textContent = "Fehler beim Laden der Besucher.";
+    status.className = "status error";
+    return;
+  }
+  visitors = await res.json();
+  renderTable();
+  status.textContent = "";
+}
+
+function getFilteredVisitors(){
+  const search = (document.getElementById("filter-search").value || "").toLowerCase();
+  const openOnly = document.getElementById("filter-open-only").checked;
+
+  return visitors
+    .slice()
+    .filter(v => {
+      if (openOnly && v.checkout) return false;
+      if (search){
+        const hay = [v.name, v.firma, v.ansprechpartner, v.ausweisnummer, v.grund]
+          .map(x => (x || "").toString().toLowerCase()).join(" ");
+        if (!hay.includes(search)) return false;
+      }
+      return true;
+    })
+    .sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0));
+}
+
+function renderTable(){
+  const tbl = document.getElementById("tbl");
+  const filtered = getFilteredVisitors();
+
+  let html = `
+    <tr>
+      <th>Status</th><th>Name</th><th>Firma</th><th>Ansprechpartner</th><th>Grund</th>
+      <th>Ausweisnummer</th><th>Erfasst von</th><th>Check-in</th>
+      <th>Checkout</th><th style="text-align:center;">Aktionen</th>
+    </tr>
+  `;
+
+  filtered.forEach(v => {
+    const open = !v.checkout;
+    const id = v.id;
+    html += `
+      <tr>
+        <td>${open ? '<span class="pill-open">offen</span>' : '<span class="pill-closed">ausgecheckt</span>'}</td>
+        <td>${esc(v.name)}</td>
+        <td>${esc(v.firma)}</td>
+        <td>${esc(v.ansprechpartner)}</td>
+        <td>${esc(v.grund)}</td>
+        <td>${esc(v.ausweisnummer)}</td>
+        <td>${esc(v.createdBy)}</td>
+        <td>${formatDate(v.timestamp)}</td>
+        <td>${v.checkout ? formatDate(v.checkout) : "-"}</td>
+        <td>
+          <div class="actions" style="justify-content:center;">
+            <button type="button" class="btn-small" onclick="startEdit('${id}')" ${open ? "" : "disabled"}>Bearbeiten</button>
+            <button type="button" class="btn-small btn-secondary" onclick="checkoutVisitor('${id}')" ${open ? "" : "disabled"}>Checkout</button>
+          </div>
+        </td>
+      </tr>
+    `;
+  });
+
+  if (!filtered.length) {
+    html += `<tr><td colspan="10" style="text-align:center;color:#5e738a;padding:28px;">${visitors.length ? "Keine Treffer für den aktuellen Filter." : "Noch keine Besucher erfasst."}</td></tr>`;
+  }
+
+  tbl.innerHTML = html;
+
+  const total = visitors.length;
+  const openCount = visitors.filter(v => !v.checkout).length;
+  document.getElementById("summary").textContent =
+    `Gesamt: ${total} Besucher, davon ${openCount} offen – angezeigt: ${filtered.length}`;
+}
+
+function resetForm(){
+  ["edit-id","name","firma","ansprechpartner","grund","ausweisnummer"].forEach(id => {
+    document.getElementById(id).value = "";
+  });
+  const status = document.getElementById("form-status");
+  status.textContent = "";
+  status.className = "status";
+}
+
+function startEdit(id){
+  const v = visitors.find(x => x.id === id);
+  if (!v) return;
+  const status = document.getElementById("form-status");
+  if (v.checkout){
+    status.textContent = "Bereits ausgecheckte Besucher können nicht mehr bearbeitet werden.";
+    status.className = "status error";
+    return;
+  }
+  document.getElementById("edit-id").value = v.id;
+  document.getElementById("name").value = v.name || "";
+  document.getElementById("firma").value = v.firma || "";
+  document.getElementById("ansprechpartner").value = v.ansprechpartner || "";
+  document.getElementById("grund").value = v.grund || "";
+  document.getElementById("ausweisnummer").value = v.ausweisnummer || "";
+  status.textContent = "Bearbeitung eines bestehenden Besuchers.";
+  status.className = "status";
+}
+
+async function saveVisitor(){
+  const status = document.getElementById("form-status");
+  status.textContent = "";
+  status.className = "status";
+
+  const id = document.getElementById("edit-id").value;
+  const name = document.getElementById("name").value.trim();
+  const firma = document.getElementById("firma").value.trim();
+  const ansprechpartner = document.getElementById("ansprechpartner").value.trim();
+  const grund = document.getElementById("grund").value.trim();
+  const ausweisnummer = document.getElementById("ausweisnummer").value.trim();
+
+  if (!name || !ausweisnummer){
+    status.textContent = "Name und Ausweisnummer sind Pflichtfelder.";
+    status.className = "status error";
+    return;
+  }
+
+  const payload = { name, firma, ansprechpartner, grund, ausweisnummer };
+
+  try{
+    let res;
+    if (id){
+      res = await api("/visitors/" + encodeURIComponent(id), {
+        method:"PUT", headers:{ "content-type":"application/json" }, body:JSON.stringify(payload)
+      });
+    } else {
+      res = await api("/visitors", {
+        method:"POST", headers:{ "content-type":"application/json" }, body:JSON.stringify(payload)
+      });
+    }
+    if (!res) return;
+    if (!res.ok){
+      status.textContent = (await res.text()) || "Fehler beim Speichern.";
+      status.className = "status error";
+      return;
+    }
+    const saved = await res.json();
+
+    const idx = visitors.findIndex(v => v.id === saved.id);
+    if (idx >= 0) visitors[idx] = saved;
+    else visitors.unshift(saved);
+    renderTable();
+
+    status.textContent = "Besucher gespeichert.";
+    status.className = "status ok";
+    resetForm();
+  } catch(e){
+    status.textContent = "Netzwerkfehler.";
+    status.className = "status error";
+  }
+}
+
+async function checkoutVisitor(id){
+  const v = visitors.find(x => x.id === id);
+  if (!v || v.checkout) return;
+  if (!confirm(`Besucher "${v.name || ""}" jetzt auschecken?`)) return;
+
+  const status = document.getElementById("table-status");
+  status.textContent = "";
+
+  const res = await api("/visitors/checkout/" + encodeURIComponent(id), { method:"POST" });
+  if (!res) return;
+  if (!res.ok){
+    status.textContent = (await res.text()) || "Fehler beim Checkout.";
+    status.className = "status error";
+    return;
+  }
+  const saved = await res.json();
+  const idx = visitors.findIndex(v => v.id === saved.id);
+  if (idx >= 0) visitors[idx] = saved;
+  renderTable();
+
+  status.textContent = "Besucher ausgecheckt.";
+  status.className = "status ok";
+}
+
+async function logout(){
+  const token = localStorage.getItem("sessionToken");
+  try { await fetch("/auth/logout",{ method:"POST", headers:{ "x-session-token":token }}); } catch {}
+  localStorage.removeItem("sessionToken");
+  localStorage.removeItem("sessionRole");
+  window.location.href = "/login";
+}
+
+function applyRole(){
+  const role = localStorage.getItem("sessionRole");
+  const adminLink = document.getElementById("link-admin");
+  if (adminLink && role !== "admin") adminLink.style.display = "none";
+}
+
+document.addEventListener("DOMContentLoaded", applyRole);
+loadVisitors();
+</script>
+</body>
+</html>

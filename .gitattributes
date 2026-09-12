@@ -1,0 +1,9 @@
+# Container-/Linux-kritische Dateien IMMER mit LF speichern und auschecken.
+# CRLF würde Shebangs in den Shell-Scripts und das Containerfile auf der
+# Kunden-VM zerschießen (unabhängig von core.autocrlf des Auscheckenden).
+*.sh                    text eol=lf
+appliance/Containerfile text eol=lf
+.dockerignore           text eol=lf
+*.yml                   text eol=lf
+*.yaml                  text eol=lf
+*.mjs                   text eol=lf

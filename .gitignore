@@ -1,0 +1,18 @@
+node_modules/
+.wrangler/
+
+# Laufzeit- und Betriebsdaten – niemals committen
+.env
+.env.*
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+besucher.db
+data/
+backups/
+
+# TLS (lokale Zertifikate nie committen)
+tls/
+*.pem
+*.key
