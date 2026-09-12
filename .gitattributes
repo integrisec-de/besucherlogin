@@ -7,3 +7,8 @@ appliance/Containerfile text eol=lf
 *.yml                   text eol=lf
 *.yaml                  text eol=lf
 *.mjs                   text eol=lf
+
+# qrcode.js ist die einzige Textdatei, deren SHA-256 in sbom.cdx.json steht.
+# Ohne feste Zeilenenden liefert ein Windows-Checkout CRLF und damit einen
+# anderen Hash als die SBOM angibt - die Pruefung schlaege dort faelschlich fehl.
+qrcode.js               text eol=lf
