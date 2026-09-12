@@ -90,6 +90,11 @@ Andere Werte schalten ihn **nicht** ein. Im Demo-Modus antworten diese Routen mi
 2FA-Einrichtung · alle `/backup`-Routen. Besucher erfassen, ein- und auschecken,
 Suche und Export bleiben offen.
 
+> **Variablen greifen erst mit dem nächsten Deployment.** Wer `DEMO` nachträglich
+> setzt, muss einmal neu deployen – ein Push genügt, oder *Deployments → Retry
+> deployment*. Kontrolle: `curl https://<projekt>.pages.dev/branding` muss
+> `"demo":true` liefern.
+
 ### Ersten Benutzer anlegen – Pflichtschritt
 
 Unter Node legt `server.mjs` beim ersten Start automatisch einen `admin` an.
@@ -105,7 +110,10 @@ node tools/hash-password.mjs
 Das Skript fragt das Passwort ab und gibt einen fertigen Datensatz aus. Als
 Argument übergeben funktioniert auch, landet dann aber in der Shell-History.
 
-Den Datensatz in **`AUTH_KV`** unter dem Schlüssel `user:admin` ablegen:
+Den Datensatz in **`AUTH_KV`** ablegen – als **ein einziger** Eintrag: der
+Schlüssel lautet `user:admin`, der **komplette JSON-Block unten kommt in das Feld
+*Value***. Nicht je Feld einen eigenen KV-Eintrag anlegen – der Server liest genau
+einen Schlüssel und erwartet dort das ganze Objekt:
 
 ```json
 {
@@ -128,7 +136,8 @@ PBKDF2-SHA256 mit 100.000 Iterationen – kein bcrypt, kein Klartext.
 
 Ohne eigenen Eintrag gelten: Sitzungsdauer **480 Minuten**, Aufbewahrung **aktiv mit
 90 Tagen**. Bei `DEMO=true` ist `PUT /settings` gesperrt – wer kürzere Fristen will,
-legt `config:settings` direkt in `AUTH_KV` an:
+legt `config:settings` direkt in `AUTH_KV` an – wieder Schlüssel plus komplettes
+JSON als *Value*:
 
 ```json
 { "sessionTtlMinutes": 480, "retentionEnabled": true, "retentionDays": 7 }
