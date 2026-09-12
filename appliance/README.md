@@ -39,6 +39,25 @@ Ein Image-/Container-Tausch fasst `/opt/besucherlogin/data` **nie** an – die D
 
 - Linux mit **systemd** und **rootful podman** (oder docker), `openssl`
 
+## Dateien auf die VM holen
+
+Gebraucht wird nur das Verzeichnis `appliance/`. Ohne Git, direkt aus dem Release:
+
+```bash
+curl -fsSL https://github.com/integrisec-de/besucherlogin/archive/refs/tags/v1.0.0.tar.gz \
+  | tar -xz --strip-components=1 besucherlogin-1.0.0/appliance
+cd appliance && chmod +x *.sh
+```
+
+Alternativ das ganze Repo per Git:
+
+```bash
+git clone --depth 1 --branch v1.0.0 https://github.com/integrisec-de/besucherlogin.git
+cd besucherlogin/appliance && chmod +x *.sh
+```
+
+Das `chmod` ist nötig – im Archiv sind die Scripts nicht als ausführbar markiert.
+
 ## Installation (einmalig)
 
 ```bash

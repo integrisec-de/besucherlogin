@@ -34,6 +34,12 @@ jobs:
           tags: |
             type=semver,pattern=v{{version}}
             type=raw,value=latest
+          # Ohne diese Angaben ueberschreibt die Action die LABEL-Zeilen aus dem
+          # Containerfile mit Repo-Name und englischer GitHub-Beschreibung.
+          labels: |
+            org.opencontainers.image.title=Besucherlogin
+            org.opencontainers.image.description=DSGVO-konformes Besuchermanagement (Node + node:sqlite), self-hosted
+            org.opencontainers.image.vendor=integrisec
 
       - name: Build & Push
         uses: docker/build-push-action@v6

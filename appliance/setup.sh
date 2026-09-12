@@ -41,7 +41,6 @@ fi
 env_set BESUCHERLOGIN_IMAGE "$IMAGE"
 env_set BESUCHERLOGIN_TAG   "$TAG"
 env_set BESUCHERLOGIN_DATA  "$DATA_DIR"
-env_set BESUCHERLOGIN_PORT  "$HOST_PORT"
 ok "Konfiguration: $ENV_FILE"
 
 # 3b) TLS: self-signed Zertifikat erzeugen, falls noch keins vorhanden → HTTPS ab Werk

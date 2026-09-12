@@ -18,7 +18,6 @@ CONTAINER="besucherlogin"
 SERVICE="besucherlogin.service"
 APP_UID=10001
 APP_GID=10001
-HOST_PORT="${BESUCHERLOGIN_PORT:-8787}"
 
 # ---- Ausgabe ----------------------------------------------------------------
 c_blue=$'\033[34m'; c_green=$'\033[32m'; c_red=$'\033[31m'; c_yellow=$'\033[33m'; c_0=$'\033[0m'

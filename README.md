@@ -12,8 +12,7 @@ werden technisch durchgesetzt statt per Notizzettel.
 dokumentieren müssen, ihre Daten aber nicht in eine fremde Cloud geben wollen –
 Behörden, Industrie, Versorger, Bildung, Gesundheitswesen.
 
-> **Screenshot folgt** – hier wird eine Bildschirmaufnahme der Besucherübersicht
-> eingefügt. <!-- TODO: assets/screenshot.png einfügen und hier einbinden -->
+![Besucherübersicht: Erfassungsformular links, Liste der aktuellen und historischen Besucher rechts](assets/screenshot.png)
 
 ## Funktionen
 
@@ -33,6 +32,10 @@ Voraussetzung: **Node.js 24+** (für `node:sqlite`). Keine weiteren Abhängigkei
 kein Build, kein Paketmanager-Install.
 
 ```bash
+# Quellen holen
+git clone https://github.com/integrisec-de/besucherlogin.git
+cd besucherlogin
+
 # einmalig: Startpasswort setzen
 ADMIN_PASSWORD="EinStarkesPasswort" node --experimental-sqlite server.mjs
 
