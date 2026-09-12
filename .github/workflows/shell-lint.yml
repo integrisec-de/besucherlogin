@@ -18,6 +18,10 @@ on:
       - '.github/workflows/shell-lint.yml'
   workflow_dispatch:
 
+# Nur Lesezugriff: der Lauf braucht ausschliesslich den Checkout.
+permissions:
+  contents: read
+
 jobs:
   lint:
     runs-on: ubuntu-latest

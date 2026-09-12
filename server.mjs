@@ -183,7 +183,10 @@ async function seedAdmin() {
     disabled: false,
     createdAt: Date.now()
   }));
-  console.log(`[seed] Admin-Benutzer angelegt  ->  Login: admin  /  Passwort: ${pw}`);
+  // Kein Klartext-Passwort ins Log: auf der Appliance landet stdout in journalctl
+  // bzw. den Container-Logs und bleibt dort dauerhaft lesbar. Das Passwort kennt
+  // ohnehin, wer ADMIN_PASSWORD gesetzt hat; setup.sh zeigt es selbst an.
+  console.log("[seed] Admin-Benutzer 'admin' angelegt (Passwort aus ADMIN_PASSWORD).");
   if (pw === "admin") console.log("[seed] WARNUNG: Standardpasswort! Bitte nach dem ersten Login ändern.");
 }
 
